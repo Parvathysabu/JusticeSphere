@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Lawyer</title>
+    <!-- plugins:css -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='dash/vendors/mdi/css/materialdesignicons.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dash/vendors/flag-icon-css/css/flag-icons.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dash/vendors/css/vendor.bundle.base.css') }}">
+    <!-- endinject -->
+    <!-- Plugin css for this page -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='dash/vendors/font-awesome/css/font-awesome.min.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='dash/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css') }}">
+    <!-- End plugin css for this page -->
+    <!-- inject:css -->
+    <!-- endinject -->
+    <!-- Layout styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='dash/css/vertical-light-layout/style.css') }}">
+    <!-- End layout styles -->
+    <link rel="shortcut icon" href="{{ url_for('static', filename='dash/images/favicon.png') }}" />
+    <style>
+      html, body {
+        height: 100%;
+      }
+      .container-scroller {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .page-body-wrapper {
+        flex: 1;
+        display: flex;
+      }
+      .main-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .content-wrapper {
+        flex: 1;
+      }
+      .footer {
+        margin-top: auto;
+      }
+      /* Ensure canvas fills the card body properly */
+      .card-body canvas {
+        max-height: 200px;
+        width: 100% !important;
+        height: auto !important;
+      }
+    </style>
+  </head>
+  <body>
+    
+    <div class="container-scroller">
+      
+      <!-- partial:partials/_navbar.html -->
+      <nav class="navbar default-layout-navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
+  <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
+    <a class="navbar-brand brand-logo text-success" href="{{ url_for('lawyer_dashboard') }}">Lawyer</a>
+    <a class="navbar-brand brand-logo-mini text-success" href="{{ url_for('lawyer_dashboard') }}">JSL</a>
+  </div>
+  <div class="navbar-menu-wrapper d-flex align-items-stretch">
+    <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
+      <span class="mdi mdi-menu"></span>
+    </button>
+    <div class="search-field d-none d-xl-block">
+     
+    </div>
+    <ul class="navbar-nav navbar-nav-right">
+      
+      <li class="nav-item nav-profile dropdown">
+        <a class="nav-link dropdown-toggle" id="profileDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+          <!-- <div class="nav-profile-img">
+            <img src="{{ url_for('static', filename='dash/images/faces/img1.jpg') }}" alt="image">
+          </div> -->
+          <div class="nav-profile-text">
+            <p class="mb-1 text-black">{{ session['username'] | capitalize }}</p>
+          </div>
+        </a>
+        <div class="dropdown-menu navbar-dropdown dropdown-menu-end p-0 border-0 font-size-sm" aria-labelledby="profileDropdown" data-x-placement="bottom-end">
+        
+          <div class="p-2">
+            <a class="dropdown-item py-1 d-flex align-items-center justify-content-between" href="{{ url_for('logout') }}">
+              <span>Log Out</span>
+              <i class="mdi mdi-logout ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </li>
+
+      <li class="nav-item dropdown">
+        <a class="nav-link count-indicator dropdown-toggle" id="notificationDropdown" href="#" data-bs-toggle="dropdown">
+          <i class="mdi mdi-bell-outline"></i>
+          <span id="notif-count" class="count-symbol bg-danger" style="display: none;"></span>
+        </a>
+        <div class="dropdown-menu dropdown-menu-end navbar-dropdown preview-list" aria-labelledby="notificationDropdown">
+          <h6 class="p-3 mb-0 bg-primary text-white py-4">Notifications</h6>
+          <div class="dropdown-divider"></div>
+          <div id="notif-items">
+            <!-- Notifications will be loaded here via JS -->
+          </div>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item text-center" href="{{ url_for('lawyer_notifications') }}">See all notifications</a>
+        </div>
+      </li>
+    </ul>
+    <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas">
+      <span class="mdi mdi-menu"></span>
+    </button>
+  </div>
+</nav>
+      <!-- partial -->
+      <div class="container-fluid page-body-wrapper">
+              <!-- partial:partials/_sidebar.html -->
+        <nav class="sidebar sidebar-offcanvas" id="sidebar">
+  <ul class="nav">
+    <li class="nav-item nav-category">Main</li>
+    <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('lawyer_dashboard') }}">
+                <span class="icon-bg"><i class="mdi mdi-view-dashboard menu-icon"></i></span>
+                <span class="menu-title">Dashboard</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('lawyer_profile') }}">
+                <span class="icon-bg"><i class="mdi mdi-account menu-icon"></i></span>
+                <span class="menu-title">Profile</span>
+              </a>
+            </li>
+
+            
+
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('lawyer_appointments') }}">
+                <span class="icon-bg"><i class="mdi mdi-calendar-check menu-icon"></i></span>
+                <span class="menu-title">Appointments</span>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('lawyer_cases') }}">
+                <span class="icon-bg"><i class="mdi mdi-briefcase-check menu-icon"></i></span>
+                <span class="menu-title">My Cases</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('lawyer_chatbot') }}">
+                <span class="icon-bg"><i class="mdi mdi-robot menu-icon"></i></span>
+                <span class="menu-title">AI Chatbot</span>
+              </a>
+            </li>
+
+            <!-- <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('client_requests') }}">
+                <span class="icon-bg"><i class="mdi mdi-email-outline menu-icon"></i></span>
+                <span class="menu-title">Client Messages</span>
+              </a>
+            </li> -->
+  </ul>
+</nav>
+        <div class="main-panel">
+          {% block content %}
+          {% endblock %}
+          <!-- partial:partials/_footer.html -->
+          <footer class="footer">
+            <div class="footer-inner-wraper">
+              <div class="d-sm-flex justify-content-center justify-content-sm-between">
+                <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2025 JusticeHub. All rights reserved.</span>
+              
+              </div>
+            </div>
+          </footer>
+          <!-- partial -->
+        </div>
+        <!-- main-panel ends -->
+      </div>
+      <!-- page-body-wrapper ends -->
+    </div>
+    <!-- container-scroller -->
+    <!-- plugins:js -->
+    <script src="{{ url_for('static', filename='dash/vendors/js/vendor.bundle.base.js') }}"></script>
+    <!-- endinject -->
+    <!-- Plugin js for this page -->
+    <script src="{{ url_for('static', filename='dash/vendors/chart.js/chart.umd.js') }}"></script>
+    <script src="{{ url_for('static', filename='dash/vendors/jquery-circle-progress/js/circle-progress.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='dash/js/jquery.cookie.js') }}"></script>
+    <!-- End plugin js for this page -->
+    <!-- inject:js -->
+    <script src="{{ url_for('static', filename='dash/js/off-canvas.js') }}"></script>
+    <script src="{{ url_for('static', filename='dash/js/hoverable-collapse.js') }}"></script>
+    <script src="{{ url_for('static', filename='dash/js/misc.js') }}"></script>
+    <script src="{{ url_for('static', filename='dash/js/settings.js') }}"></script>
+    <script src="{{ url_for('static', filename='dash/js/todolist.js') }}"></script>
+    <!-- endinject -->
+    <!-- Custom js for this page -->
+    <script src="{{ url_for('static', filename='dash/js/dashboard.js') }}"></script>
+    <!-- End custom js for this page -->
+    <!-- Page-specific JS injection point for charts -->
+<script>
+// Show popup toast
+function showToast(message) {
+    const id = "toast-" + Date.now();
+
+    const toastHTML = `
+        <div id="${id}" class="toast align-items-center text-white bg-primary border-0" 
+            role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000"
+            style="min-width: 280px;">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                    data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    `;
+
+    const container = document.getElementById("toast-container");
+    container.insertAdjacentHTML("beforeend", toastHTML);
+
+    const toastEl = document.getElementById(id);
+    const toast = new bootstrap.Toast(toastEl);
+    toast.show();
+}
+
+// Fetch notifications (Dropdown + Popup + Mark Read)
+function fetchNotifications() {
+    fetch("/lawyer/notifications")
+        .then(res => res.json())
+        .then(data => {
+            const notifCount = document.getElementById("notif-count");
+            const itemsBox = document.getElementById("notif-items");
+
+            if (!itemsBox) return;
+
+            itemsBox.innerHTML = '';
+            let unread = 0;
+
+            // Handle each notification
+            data.forEach((n, index) => {
+                if (n.is_read === 0) {
+                    unread++;
+                }
+
+                if (index < 3) { // Show only last 3 in dropdown
+                    itemsBox.innerHTML += `
+                        <a class="dropdown-item preview-item" href="/lawyer/appointments">
+                            <div class="preview-item-content py-2">
+                                <h6 class="preview-subject font-weight-normal text-dark mb-1" style="white-space: normal;">${n.message}</h6>
+                                <p class="text-muted small mb-0">${n.created_at}</p>
+                            </div>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                    `;
+                }
+            });
+
+            if (data.length === 0) {
+                itemsBox.innerHTML = '<p class="p-3 mb-0 text-center text-muted">No notifications</p>';
+            }
+
+            // Update notification count
+            if (unread > 0) {
+                notifCount.textContent = unread;
+                notifCount.style.display = "inline-block";
+            } else {
+                notifCount.style.display = "none";
+            }
+        });
+}
+
+// Poll every 60 seconds
+setInterval(fetchNotifications, 60000);
+fetchNotifications();
+</script>
+
+<div id="toast-container"></div>
+<style>
+#toast-container{
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.toast-msg{
+    min-width: 260px;
+    margin-bottom: 10px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    animation: slideIn .5s ease;
+}
+
+.toast-success{ background: #28a745; }
+.toast-danger{ background: #dc3545; }
+.toast-warning{ background: #ffc107; color:#000; }
+.toast-info{ background: #0dcaf0; color:#000; }
+
+@keyframes slideIn{
+    from{ opacity:0; transform: translateX(40px); }
+    to{ opacity:1; transform: translateX(0); }
+}
+</style>
+<script>
+function showToast(message, category="success"){
+    const container = document.getElementById("toast-container");
+
+    const toast = document.createElement("div");
+    toast.className = `toast-msg toast-${category}`;
+    toast.innerText = message;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => toast.remove(), 400);
+    }, 3000);
+}
+</script>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <script>
+      {% for category, message in messages %}
+        showToast("{{ message }}", "{{ category }}");
+      {% endfor %}
+    </script>
+  {% endif %}
+{% endwith %}
+{% block page_js %}{% endblock %}
+  </body>
+</html>

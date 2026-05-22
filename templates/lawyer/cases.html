@@ -1,0 +1,371 @@
+{% extends "lawyer/base.html" %}
+{% block content %}
+<style>
+  /* Horizontal scrolling for Actions column */
+  .action-scroll {
+    max-width: 260px;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .action-scroll form,
+  .action-scroll button {
+    display: inline-block !important;
+    margin-bottom: 5px;
+  }
+
+  .pending-badge {
+    background-color: #FFD700;
+    color: #000;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 5px;
+  }
+
+  .hearing-update-notice {
+    background-color: #E3F2FD;
+    border-left: 4px solid #2196F3;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+  }
+
+  .hearing-update-notice i {
+    color: #2196F3;
+    margin-right: 8px;
+  }
+</style>
+
+<div class="content-wrapper">
+
+  <div class="page-header">
+    <h3 class="page-title">My Cases</h3>
+  </div>
+
+  <!-- Hearing Status Update Notice -->
+  <div class="hearing-update-notice">
+    <i class="mdi mdi-information-outline"></i>
+    <strong>Important:</strong> Hearing status updates are subject to admin verification before being applied to your cases.
+  </div>
+
+  <!-- Approved Cases -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h4 class="card-title text-success">Approved Cases</h4>
+
+      {% if approved_cases %}
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead class="thead-dark">
+            <tr>
+              <th>Client Name</th>
+              <th>Phone</th>
+              <th>Category</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Status</th>
+              <!-- <th>Hearing Status</th> -->
+              <th>Actions</th>
+              <th>Evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            {% for case in approved_cases %}
+            <tr>
+
+              <td>{{ case.client_name }}</td>
+              <td>{{ case.client_phone }}</td>
+              <td>{{ case.category }}</td>
+              <td>{{ case.appointment_date }}</td>
+              <td>{{ case.appointment_time }}</td>
+
+              <td><span class="badge bg-success">{{ case.status }}</span></td>
+
+              <!-- SHOW CURRENT HEARING STATUS -->
+              <!-- <td>
+                <span class="badge bg-info">
+                  {{ case.hearing_status if case.hearing_status else "Not Started" }}
+                </span>
+              </td> -->
+
+              <!-- Actions Column with Horizontal Scroll -->
+              {% if case.category != 'missing_person' and case.category != 'stolen_property' %}
+              <td class="action-scroll">
+
+                <!-- View Details -->
+                <button type="button" class="btn btn-sm btn-info view-details-btn" data-category="{{ case.category }}"
+                  data-case-id="{{ case.case_id }}">
+                  View
+                </button>
+
+                <!-- Hearing Buttons with Confirmation Modal -->
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                  data-bs-target="#hearingConfirmModal" data-hearing-status="First Hearing"
+                  data-appointment-id="{{ case.appointment_id }}">
+                  First
+                </button>
+
+                <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal"
+                  data-bs-target="#hearingConfirmModal" data-hearing-status="Second Hearing"
+                  data-appointment-id="{{ case.appointment_id }}">
+                  Second
+                </button>
+
+                <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal"
+                  data-bs-target="#hearingConfirmModal" data-hearing-status="Third Hearing"
+                  data-appointment-id="{{ case.appointment_id }}">
+                  Third
+                </button>
+
+                <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal"
+                  data-bs-target="#hearingConfirmModal" data-hearing-status="Final Hearing"
+                  data-appointment-id="{{ case.appointment_id }}">
+                  Final
+                </button>
+
+                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                  data-bs-target="#hearingConfirmModal" data-hearing-status="Closed"
+                  data-appointment-id="{{ case.appointment_id }}">
+                  Closed
+                </button>
+
+              </td>
+              {% elif case.category == 'missing_person' %}
+              <td class="action-scroll">
+                <button type="button" class="btn btn-sm btn-info view-details-btn">
+
+                  Found Person
+                </button>
+              </td>
+              {% elif case.category == 'stolen_property' %}
+              <td class="action-scroll">
+                <button type="button" class="btn btn-sm btn-info view-details-btn">
+                  Recovered Property
+                </button>
+              </td>
+              {% endif %}
+
+              <!-- Evidence Section -->
+              <td>
+                {% for file in case.evidence_files %}
+                {% if case.category.lower() in ['crime'] %}
+                {% set folder = 'crime' %}
+                {% elif case.category.lower() in ['missing_person', 'missing'] %}
+                {% set folder = 'missing' %}
+                {% elif case.category.lower() in ['stolen_property', 'stolen'] %}
+                {% set folder = 'stolen' %}
+                {% else %}
+                {% set folder = '' %}
+                {% endif %}
+
+                <a href="{{ url_for('static', filename='uploads/' ~ folder ~ '/' ~ file) }}" target="_blank">
+                  <img src="{{ url_for('static', filename='uploads/' ~ folder ~ '/' ~ file) }}" width="70" height="70"
+                    class="rounded border me-1 mb-1">
+                </a>
+                {% endfor %}
+              </td>
+
+            </tr>
+            {% endfor %}
+
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p>No approved cases found.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Closed Cases -->
+  <div class="card">
+    <div class="card-body">
+      <h4 class="card-title text-secondary">Case History</h4>
+
+      {% if closed_cases %}
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead class="thead-dark">
+            <tr>
+              <th>Client Name</th>
+              <th>Phone</th>
+              <th>Category</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for case in closed_cases %}
+            <tr>
+              <td>{{ case.client_name }}</td>
+              <td>{{ case.client_phone }}</td>
+              <td>{{ case.category }}</td>
+              <td>{{ case.appointment_date }}</td>
+              <td>{{ case.appointment_time }}</td>
+              <td><span class="badge bg-secondary">{{ case.status }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+
+        </table>
+      </div>
+
+      {% else %}
+      <p>No closed cases found.</p>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<!-- Case Details Modal -->
+<div class="modal fade" id="caseDetailsModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">Case Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-striped" id="caseDetailsTable"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hearing Status Confirmation Modal -->
+<div class="modal fade" id="hearingConfirmModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title">Confirm Hearing Status Update</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Important Notice:</strong></p>
+        <p>You are about to submit a hearing status update request. This update will be sent to the admin for verification before being applied to the case.</p>
+        <p>
+          <strong>Requested Status:</strong> <span id="hearingStatusDisplay" class="badge bg-warning"></span>
+        </p>
+        <div class="alert alert-info mt-3">
+          <i class="mdi mdi-information-outline"></i>
+          The client will be notified once the admin approves this update.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmBtn">Submit for Verification</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Handle hearing status confirmation
+  const hearingConfirmModal = document.getElementById('hearingConfirmModal');
+  let selectedAppointmentId = null;
+  let selectedHearingStatus = null;
+
+  hearingConfirmModal.addEventListener('show.bs.modal', (event) => {
+    const button = event.relatedTarget;
+    selectedAppointmentId = button.getAttribute('data-appointment-id');
+    selectedHearingStatus = button.getAttribute('data-hearing-status');
+    document.getElementById('hearingStatusDisplay').textContent = selectedHearingStatus;
+  });
+
+  document.getElementById('confirmBtn').addEventListener('click', () => {
+    if (selectedAppointmentId && selectedHearingStatus) {
+      // Create and submit the form
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '{{ url_for("update_hearing_status") }}';
+
+      const appointmentInput = document.createElement('input');
+      appointmentInput.type = 'hidden';
+      appointmentInput.name = 'appointment_id';
+      appointmentInput.value = selectedAppointmentId;
+
+      const statusInput = document.createElement('input');
+      statusInput.type = 'hidden';
+      statusInput.name = 'hearing_status';
+      statusInput.value = selectedHearingStatus;
+
+      form.appendChild(appointmentInput);
+      form.appendChild(statusInput);
+      document.body.appendChild(form);
+      form.submit();
+    }
+  });
+
+  // Handle case details modal
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".view-details-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+
+        const category = btn.dataset.category;
+        const caseId = btn.dataset.caseId;
+
+        try {
+          const response = await fetch(`/lawyer/case_details/${category}/${caseId}`);
+          const data = await response.json();
+
+          const table = document.getElementById("caseDetailsTable");
+          table.innerHTML = "";
+
+          for (const [key, value] of Object.entries(data)) {
+            if (key === 'evidence_files' && Array.isArray(value) && value.length) {
+              // Map category to uploads folder
+              let folder = 'crime';
+              const cat = category.toLowerCase();
+              if (cat === 'missing_person' || cat === 'missing') folder = 'missing';
+              else if (cat === 'stolen_property' || cat === 'stolen') folder = 'stolen';
+
+              let imgs = value.map(filename => {
+                const fullPath = `/static/uploads/${folder}/${filename}`;
+                const isVideo = filename.match(/\.(mp4|avi|mov|wmv|flv|mkv)$/i);
+
+                if (isVideo) {
+                  return `
+                  <a href="${fullPath}" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1">
+                    <i class="mdi mdi-play"></i> Video
+                  </a>`;
+                } else {
+                  return `
+                  <a href="${fullPath}" target="_blank">
+                    <img src="${fullPath}" width="70" height="70" class="rounded border me-1 mb-1" style="object-fit: cover;">
+                  </a>`;
+                }
+              }).join('');
+
+              table.innerHTML += `
+              <tr>
+                <th>EVIDENCE</th>
+                <td>${imgs}</td>
+              </tr>`;
+            } else if (['id', 'login_id', 'photo', 'evidence_files'].includes(key) || value === null || value === undefined || value === '') {
+              continue; // Skip internal fields and empty values
+            } else {
+              table.innerHTML += `
+            <tr>
+              <th>${key.replace(/_/g, ' ').toUpperCase()}</th>
+              <td>${value ?? ''}</td>
+            </tr>`;
+            }
+          }
+
+          new bootstrap.Modal(document.getElementById("caseDetailsModal")).show();
+
+        } catch (error) {
+          alert("Failed to load case details.");
+        }
+      });
+    });
+  });
+</script>
+
+{% endblock %}

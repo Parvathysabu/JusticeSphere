@@ -1,0 +1,107 @@
+{% extends 'lawyer/base.html' %}
+
+{% block content %}
+<div class="content-wrapper">
+<div class="card">
+<div class="card-body">
+
+<h4>AI Legal Advisor</h4>
+<p>Assist citizens with legal procedures, IPC/BNS sections and legal advice.</p>
+
+<div id="chat-box" style="height:450px;overflow-y:auto;background:#f8f9fa;padding:15px;border-radius:10px;">
+
+{% if history %}
+{% for chat in history %}
+<div class="message user-message">{{chat.message}}</div>
+<div class="message bot-message">{{chat.response}}</div>
+{% endfor %}
+{% endif %}
+
+</div>
+
+<div class="input-group mt-3">
+<input type="text" id="user-input" class="form-control" placeholder="Ask legal question...">
+
+<button type="button" class="btn btn-success" id="send-btn">
+<i class="mdi mdi-send"></i>
+</button>
+</div>
+
+</div>
+</div>
+</div>
+
+<style>
+
+.message{
+margin-bottom:10px;
+padding:10px;
+border-radius:15px;
+max-width:75%;
+}
+
+.user-message{
+background:#28a745;
+color:white;
+margin-left:auto;
+}
+
+.bot-message{
+background:#e9ecef;
+}
+
+</style>
+
+{% endblock %}
+
+{% block page_js %}
+<script>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+const chat=document.getElementById("chat-box")
+const input=document.getElementById("user-input")
+const sendBtn=document.getElementById("send-btn")
+
+function sendMessage(){
+
+let msg=input.value.trim()
+if(!msg) return
+
+chat.innerHTML+=`<div class="message user-message">${msg}</div>`
+input.value=""
+
+chat.scrollTop=chat.scrollHeight
+
+fetch("/api/lawyer_chat",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({message:msg})
+})
+.then(res=>res.json())
+.then(data=>{
+
+chat.innerHTML+=`<div class="message bot-message">${data.response}</div>`
+chat.scrollTop=chat.scrollHeight
+
+})
+.catch(error=>{
+chat.innerHTML+=`<div class="message bot-message">Server error. Try again.</div>`
+})
+
+}
+
+sendBtn.addEventListener("click",sendMessage)
+
+input.addEventListener("keypress",function(e){
+if(e.key==="Enter"){
+sendMessage()
+}
+})
+
+})
+
+</script>
+{% endblock %}

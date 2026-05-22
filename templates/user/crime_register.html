@@ -1,0 +1,634 @@
+{% extends "user/base.html" %}
+{% block content %}
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title" id="form-title">📝 Register Crime</h3>
+  </div>
+
+  <style>
+    label {
+      color: #000;
+      font-weight: 600;
+    }
+
+    input.form-control::placeholder,
+    textarea.form-control::placeholder {
+      color: #8b8383;
+    }
+
+    .evidence-preview img,
+    .evidence-preview video {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      border: 1px solid #ccc;
+      display: inline-block;
+    }
+
+    .evidence-item {
+      position: relative;
+      display: inline-block;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
+    .evidence-item img,
+    .evidence-item video {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .evidence-item .remove-evidence {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .evidence-item .remove-evidence:hover {
+      background: #c82333;
+    }
+
+    .required::after {
+      content: " *";
+      color: red;
+      font-weight: bold;
+    }
+
+    #map {
+      height: 260px;
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-top: 8px;
+    }
+
+    #location-results {
+      position: absolute;
+      z-index: 1000;
+      width: 100%;
+      max-height: 180px;
+      overflow-y: auto;
+      display: none;
+      background: white;
+    }
+
+    #preview-container {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px dashed #ccc;
+      border-radius: 6px;
+      min-height: 50px;
+      display: none;
+    }
+
+    #preview-container.has-files {
+      display: block;
+    }
+  </style>
+
+  <!-- ================= FORM ================= -->
+  <div class="row mt-4">
+    <div class="col-md-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+
+          <form method="POST" action="/user/report_crime" enctype="multipart/form-data" id="crimeForm">
+
+            <input type="hidden" id="crime_id" name="crime_id">
+            <input type="hidden" id="latitude" name="latitude">
+            <input type="hidden" id="longitude" name="longitude">
+            <input type="hidden" id="deleted_evidence" name="deleted_evidence">
+
+            <!-- ROW 1 -->
+            <div class="row">
+              <div class="col-md-3">
+                <label class="required">Crime Type</label>
+                <select class="form-control" id="crimeType" name="crime_type" required>
+                  <option value="" disabled selected>Select Crime Type</option>
+                  <option>Killing/Homicide</option>
+                  <option>Assault/Physical Abuse</option>
+                  <option>Fraud</option>
+                  <option>Harassment</option>
+                  <option>Other</option>
+                </select>
+                <input type="text" class="form-control mt-2" id="otherCrimeType" name="other_crime_type"
+                  placeholder="Enter crime type" style="display:none;">
+              </div>
+
+              <div class="col-md-6 position-relative">
+                <label class="required">Location</label>
+                <input type="text" class="form-control" id="location" name="location"
+                  placeholder="Search or select location" autocomplete="off" required>
+
+                <div id="location-results" class="list-group"></div>
+
+                <div class="d-flex justify-content-end mt-2">
+                  <button type="button" class="btn btn-outline-primary btn-sm" id="getCurrentLocationBtn"
+                    title="Get Current Location">
+                    📍 Use My Current Location
+                  </button>
+                </div>
+
+                <div id="map"></div>
+              </div>
+
+              <div class="col-md-3">
+                <label class="required">Date & Time</label>
+                <input type="datetime-local" class="form-control" id="crimeDate" name="crime_date" required>
+              </div>
+            </div>
+
+            <br>
+
+            <!-- ROW 2 -->
+            <div class="row">
+              <div class="col-md-4">
+                <label>Upload Evidence (Images/Videos)</label>
+                <input type="file" class="form-control" id="evidenceInput" name="evidence[]" multiple
+                  accept="image/*,video/*">
+                <small class="form-text text-muted">Supported: JPG, PNG, MP4, AVI, MOV. <b>Video size must be less than
+                    15MB.</b></small>
+
+                <!-- Preview Container -->
+                <div id="preview-container"></div>
+              </div>
+
+              <div class="col-md-4">
+                <label>Crime Spot</label>
+                <input type="text" class="form-control" id="crimespot" name="crimespot" placeholder="Near landmark">
+              </div>
+
+              <div class="col-md-4">
+                <label>Reporter Name</label>
+                <input type="text" class="form-control" id="reporterName" name="reporter_name"
+                  placeholder="Reporter Name (optional)">
+              </div>
+            </div>
+
+            <br>
+
+            <div class="row">
+              <div class="col-md-4">
+                <label>Reporter Contact</label>
+                <input type="text" class="form-control" id="reporterContact" name="reporter_contact"
+                  placeholder="Reporter Contact (optional)">
+              </div>
+            </div>
+
+            <br>
+
+            <!-- ROW 3 -->
+            <div class="row">
+              <div class="col-md-6">
+                <label>Witnesses</label>
+                <textarea class="form-control" id="witnesses" name="witnesses" rows="3"
+                  placeholder="Witnesses (optional)"></textarea>
+              </div>
+
+              <div class="col-md-6">
+                <label>Suspects</label>
+                <textarea class="form-control" id="suspects" name="suspects" rows="3"
+                  placeholder="Suspects (optional)"></textarea>
+              </div>
+            </div>
+
+            <br>
+
+            <!-- ROW 4 -->
+            <div class="row">
+              <div class="col-md-8">
+                <label class="required">Description</label>
+                <textarea class="form-control" id="crimeDesc" name="description" rows="4"
+                  placeholder="Describe the incident..." required></textarea>
+              </div>
+
+              <!-- <div class="col-md-4">
+                <label class="required">Status</label>
+                <select class="form-control"
+                        id="status"
+                        name="status"
+                        required>
+                  <option value="" disabled selected>Select Status</option>
+                  <option>Reported</option>
+                </select>
+              </div> -->
+            </div>
+
+            <br>
+
+            <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">
+              Submit Report
+            </button>
+
+            <button type="button" class="btn btn-secondary btn-lg" id="cancel-btn" style="display:none;"
+              onclick="resetForm()">
+              Cancel
+            </button>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TABLE ================= -->
+  <div class="row mt-4">
+    <div class="col-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Crime Records</h4>
+
+          <div style="overflow-x:auto;">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Crime Type</th>
+                  <th>Date</th>
+                  <th>Location</th>
+                  <th>Crime Spot</th>
+                  <th>Reporter</th>
+                  <th>Status</th>
+                  <th>Evidence</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for crime in crimes %}
+                <tr>
+                  <td>{{ crime.crime_type }}</td>
+                  <td>{{ crime.crime_date }}</td>
+                  <td>{{ crime.location }}</td>
+                  <td>{{ crime.crimespot or '-' }}</td>
+                  <td>
+                    {{ crime.reporter_name or '-' }}<br>
+                    {{ crime.reporter_contact or '-' }}
+                  </td>
+                  <!-- <td>{{ crime.status }}</td> -->
+                  <td style="color: red;">{{ crime.status }}</td>
+
+                  <td>
+                    {% if crime.evidences %}
+                    <div class="evidence-preview">
+                      {% for e in crime.evidences %}
+                      {% if e.endswith(('.jpg', '.png', '.jpeg', '.gif', '.bmp')) %}
+                      <a href="{{ url_for('static', filename='uploads/crime/' ~ e) }}" target="_blank">
+                        <img src="{{ url_for('static', filename='uploads/crime/' ~ e) }}" alt="Evidence">
+                      </a>
+                      {% elif e.endswith(('.mp4', '.avi', '.mov', '.wmv', '.flv')) %}
+                      <a href="{{ url_for('static', filename='uploads/crime/' ~ e) }}" target="_blank">
+                        <video controls>
+                          <source src="{{ url_for('static', filename='uploads/crime/' ~ e) }}"
+                            type="video/{{ e.split('.')[-1] }}">
+                        </video>
+                      </a>
+                      {% else %}
+                      <a href="{{ url_for('static', filename='uploads/crime/' ~ e) }}" target="_blank">{{ e }}</a><br>
+                      {% endif %}
+                      {% endfor %}
+                    </div>
+                    {% else %}
+                    No Evidence
+                    {% endif %}
+                  </td>
+
+                  <td>
+                    <button class="btn btn-sm btn-info edit-btn" data-id="{{ crime.id }}"
+                      data-crime_type="{{ crime.crime_type }}" data-crime_date="{{ crime.crime_date }}"
+                      data-location="{{ crime.location }}" data-latitude="{{ crime.latitude }}"
+                      data-longitude="{{ crime.longitude }}" data-crimespot="{{ crime.crimespot or '' }}"
+                      data-description="{{ crime.description }}" data-status="{{ crime.status }}"
+                      data-reporter_name="{{ crime.reporter_name or '' }}"
+                      data-reporter_contact="{{ crime.reporter_contact or '' }}"
+                      data-witnesses="{{ crime.witnesses or '' }}" data-suspects="{{ crime.suspects or '' }}">
+                      Edit
+                    </button>
+
+                    <form method="POST" action="/user/delete_crime/{{ crime.id }}" style="display:inline;"
+                      onsubmit="return confirm('Are you sure you want to delete this crime record?');">
+                      <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SCRIPTS ================= -->
+<script>
+  let map, marker;
+  let selectedFiles = [];
+  let deletedEvidence = [];
+
+  document.addEventListener("DOMContentLoaded", function () {
+
+    // Initialize Map
+    map = L.map("map").setView([20.5937, 78.9629], 5);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+    const locationInput = document.getElementById("location");
+    const resultsBox = document.getElementById("location-results");
+
+    function setMarker(lat, lng, name) {
+      document.getElementById("latitude").value = lat.toFixed(6);
+      document.getElementById("longitude").value = lng.toFixed(6);
+      locationInput.value = name;
+
+      if (marker) marker.setLatLng([lat, lng]);
+      else marker = L.marker([lat, lng]).addTo(map);
+
+      map.setView([lat, lng], 15);
+    }
+
+    // MAP CLICK
+    map.on("click", function (e) {
+      const lat = e.latlng.lat;
+      const lng = e.latlng.lng;
+
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+        .then(r => r.json())
+        .then(d => {
+          setMarker(lat, lng, d.display_name || `${lat}, ${lng}`);
+        });
+    });
+
+    // GET CURRENT LOCATION
+    const getCurrentLocationBtn = document.getElementById("getCurrentLocationBtn");
+    if (getCurrentLocationBtn) {
+      getCurrentLocationBtn.addEventListener("click", function () {
+        if (navigator.geolocation) {
+          const originalText = getCurrentLocationBtn.innerHTML;
+          getCurrentLocationBtn.innerHTML = "⏳";
+
+          navigator.geolocation.getCurrentPosition(
+            async function (position) {
+              const lat = position.coords.latitude;
+              const lng = position.coords.longitude;
+              try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+                const data = await res.json();
+                setMarker(lat, lng, data.display_name || `${lat}, ${lng}`);
+              } catch (err) {
+                console.error("Geocoding failed", err);
+                setMarker(lat, lng, `${lat}, ${lng}`);
+              } finally {
+                getCurrentLocationBtn.innerHTML = originalText;
+              }
+            },
+            function (error) {
+              getCurrentLocationBtn.innerHTML = originalText;
+              alert("Error retrieving location: " + error.message);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          );
+        } else {
+          alert("Geolocation is not supported by your browser.");
+        }
+      });
+    }
+
+    // LOCATION SEARCH
+    locationInput.addEventListener("input", async function () {
+      const q = this.value.trim();
+      if (q.length < 3) {
+        resultsBox.style.display = "none";
+        return;
+      }
+
+      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      resultsBox.innerHTML = "";
+      if (!data.length) {
+        resultsBox.style.display = "none";
+        return;
+      }
+
+      data.forEach(p => {
+        const a = document.createElement("a");
+        a.href = "#";
+        a.className = "list-group-item list-group-item-action";
+        a.textContent = p.display_name;
+
+        a.onclick = (e) => {
+          e.preventDefault();
+          setMarker(parseFloat(p.lat), parseFloat(p.lon), p.display_name);
+          resultsBox.style.display = "none";
+        };
+
+        resultsBox.appendChild(a);
+      });
+
+      resultsBox.style.display = "block";
+    });
+
+    document.addEventListener("click", function (e) {
+      if (!resultsBox.contains(e.target) && e.target !== locationInput) {
+        resultsBox.style.display = "none";
+      }
+    });
+
+    // CRIME TYPE - OTHER
+    const crimeType = document.getElementById("crimeType");
+    const otherInput = document.getElementById("otherCrimeType");
+
+    crimeType.addEventListener("change", function () {
+      if (this.value === "Other") {
+        otherInput.style.display = "block";
+        otherInput.required = true;
+      } else {
+        otherInput.style.display = "none";
+        otherInput.required = false;
+        otherInput.value = "";
+      }
+    });
+
+    // FILE PREVIEW
+    const evidenceInput = document.getElementById('evidenceInput');
+    const previewContainer = document.getElementById('preview-container');
+
+    evidenceInput.addEventListener('change', function (e) {
+      const files = Array.from(e.target.files);
+      const MAX_VIDEO_SIZE = 15 * 1024 * 1024; // 15MB
+
+      let hasOversized = false;
+      selectedFiles = files.filter(file => {
+        if (file.type.startsWith('video/') && file.size > MAX_VIDEO_SIZE) {
+          hasOversized = true;
+          return false;
+        }
+        return true;
+      });
+
+      if (hasOversized) {
+        alert("One or more videos exceed the 15MB limit and have been removed.");
+        // We update the input files so ONLY valid ones are submitted
+        updateFileInput();
+      }
+
+      updatePreview();
+    });
+
+    function updatePreview() {
+      previewContainer.innerHTML = '';
+
+      if (selectedFiles.length === 0) {
+        previewContainer.classList.remove('has-files');
+        return;
+      }
+
+      previewContainer.classList.add('has-files');
+
+      selectedFiles.forEach((file, index) => {
+        const item = document.createElement('div');
+        item.className = 'evidence-item';
+
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+          if (file.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            item.appendChild(img);
+          } else if (file.type.startsWith('video/')) {
+            const video = document.createElement('video');
+            video.src = e.target.result;
+            video.controls = false;
+            item.appendChild(video);
+          }
+
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'remove-evidence';
+          removeBtn.innerHTML = '×';
+          removeBtn.type = 'button';
+          removeBtn.onclick = function () {
+            selectedFiles.splice(index, 1);
+            updateFileInput();
+            updatePreview();
+          };
+
+          item.appendChild(removeBtn);
+        };
+
+        reader.readAsDataURL(file);
+        previewContainer.appendChild(item);
+      });
+    }
+
+    function updateFileInput() {
+      const dt = new DataTransfer();
+      selectedFiles.forEach(file => dt.items.add(file));
+      evidenceInput.files = dt.files;
+    }
+
+    // EDIT BUTTON FUNCTIONALITY
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const data = this.dataset;
+
+        document.getElementById('form-title').textContent = '✏️ Edit Crime Report';
+        document.getElementById('crime_id').value = data.id;
+        document.getElementById('crimeType').value = data.crime_type;
+
+        // Handle datetime format
+        let dateValue = data.crime_date;
+        if (dateValue && !dateValue.includes('T')) {
+          dateValue = dateValue.replace(' ', 'T');
+        }
+        document.getElementById('crimeDate').value = dateValue;
+
+        document.getElementById('location').value = data.location;
+        document.getElementById('crimespot').value = data.crimespot;
+        document.getElementById('crimeDesc').value = data.description;
+        const statusEl = document.getElementById('status');
+        if (statusEl) statusEl.value = data.status;
+        document.getElementById('reporterName').value = data.reporter_name;
+        document.getElementById('reporterContact').value = data.reporter_contact;
+        document.getElementById('witnesses').value = data.witnesses;
+        document.getElementById('suspects').value = data.suspects;
+
+        // Set map location if coordinates exist
+        if (data.latitude && data.longitude) {
+          const lat = parseFloat(data.latitude);
+          const lng = parseFloat(data.longitude);
+          document.getElementById('latitude').value = lat;
+          document.getElementById('longitude').value = lng;
+
+          if (marker) marker.setLatLng([lat, lng]);
+          else marker = L.marker([lat, lng]).addTo(map);
+          map.setView([lat, lng], 15);
+        }
+
+        document.getElementById('submit-btn').textContent = 'Update Report';
+        document.getElementById('cancel-btn').style.display = 'inline-block';
+
+        // Scroll to form
+        document.getElementById('crimeForm').scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+
+    // Form Submission Validation
+    document.getElementById('crimeForm').addEventListener('submit', function (e) {
+      const files = selectedFiles;
+      const MAX_VIDEO_SIZE = 15 * 1024 * 1024; // 15MB
+      const oversized = files.find(file => file.type.startsWith('video/') && file.size > MAX_VIDEO_SIZE);
+
+      if (oversized) {
+        e.preventDefault();
+        alert("Please ensure all videos are under 15MB.");
+      }
+    });
+
+  });
+
+  function resetForm() {
+    document.getElementById('crimeForm').reset();
+    document.getElementById('form-title').textContent = '📝 Register Crime';
+    document.getElementById('crime_id').value = '';
+    document.getElementById('submit-btn').textContent = 'Submit Report';
+    document.getElementById('cancel-btn').style.display = 'none';
+    document.getElementById('otherCrimeType').style.display = 'none';
+    selectedFiles = [];
+    document.getElementById('preview-container').innerHTML = '';
+    document.getElementById('preview-container').classList.remove('has-files');
+
+    if (marker) {
+      map.removeLayer(marker);
+      marker = null;
+    }
+    map.setView([20.5937, 78.9629], 5);
+  }
+</script>
+
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title"></h3>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">All Cases</h4>
+          <p class="card-description">View details of missing persons, stolen property, and reported crimes.</p>
+
+          {% if cases and cases|length > 0 %}
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Client / Item</th>
+                  <th>Case Type</th>
+                  <th>Status</th>
+                  <th>Date Filed</th>
+                  
+                </tr>
+              </thead>
+              <tbody>
+                {% for case in cases %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ case.client_name }}</td>
+                  <td>{{ case.case_type }}</td>
+                  <td>
+                    {% if case.status == 'Pending' %}
+                      <span class="badge badge-warning">Pending</span>
+                    {% elif case.status == 'Closed' %}
+                      <span class="badge badge-success">Closed</span>
+                    {% else %}
+                      <span class="badge badge-info">{{ case.status }}</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ case.date_filed.strftime('%Y-%m-%d') if case.date_filed else '—' }}</td>
+                  
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="alert alert-info mt-3" role="alert">
+            No cases available at the moment.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

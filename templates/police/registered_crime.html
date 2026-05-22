@@ -1,0 +1,171 @@
+{% extends "police/base.html" %}
+{% block content %}
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title" id="form-title">📝 Registered Crime</h3>
+  </div>
+
+  <style>
+    label {
+      color: #000000;
+      font-weight: 600;
+    }
+
+    input.form-control::placeholder,
+    textarea.form-control::placeholder {
+      color: #8b8383;
+    }
+
+    .status-btn {
+      margin: 2px;
+    }
+
+    /* Horizontal Scroll */
+    .table-scroll {
+      overflow-x: auto;
+      white-space: nowrap;
+      padding-bottom: 10px;
+    }
+
+    table.table {
+      width: 100%;
+      min-width: 1400px;
+      /* ensures scrolling */
+    }
+  </style>
+
+  <!-- Crime Database Table -->
+  <div class="row mt-4">
+    <div class="col-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Crime Records</h4>
+
+          <!-- Horizontal Scroll Wrapper -->
+          <div class="table-scroll">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Crime Type</th>
+                  <th>Date & Time</th>
+                  <th>Location</th>
+                  <th>Crime Spot</th>
+                  <th>Reporter</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {% for crime in crimes %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ crime.crime_type }}</td>
+                  <td>{{ crime.crime_date }}</td>
+                  <td>{{ crime.location }}</td>
+                  <td>{{ crime.crimespot or '-' }}</td>
+                  <td>
+                    {{ crime.reporter_name or '-' }}<br>
+                    {{ crime.reporter_contact or '-' }}
+                  </td>
+
+                  <td>
+                    <span class="badge bg-info">{{ crime.status }}</span>
+                  </td>
+
+                  <!-- STATUS UPDATE BUTTONS -->
+                  <td>
+                    <button class="btn btn-sm btn-primary status-btn update-status" data-crime-id="{{ crime.id }}"
+                      data-new-status="Investigating">Investigating</button>
+
+                    <button class="btn btn-sm btn-danger status-btn update-status" data-crime-id="{{ crime.id }}"
+                      data-new-status="Closed">Closed</button>
+                  </td>
+
+                </tr>
+                {% endfor %}
+              </tbody>
+
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const editButtons = document.querySelectorAll('.edit-btn');
+
+  editButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('crime_id').value = btn.dataset.id;
+      document.getElementById('crimeType').value = btn.dataset.crime_type;
+      document.getElementById('crimeDate').value = btn.dataset.crime_date;
+      document.getElementById('location').value = btn.dataset.location;
+      document.getElementById('crimespot').value = btn.dataset.crimespot || '';
+      document.getElementById('crimeDesc').value = btn.dataset.description;
+      document.getElementById('status').value = btn.dataset.status;
+      document.getElementById('reporterName').value = btn.dataset.reporter_name || '';
+      document.getElementById('reporterContact').value = btn.dataset.reporter_contact || '';
+      document.getElementById('witnesses').value = btn.dataset.witnesses || '';
+      document.getElementById('suspects').value = btn.dataset.suspects || '';
+
+      const currentEvidenceDiv = document.getElementById('current-evidence');
+      if (btn.dataset.evidence) {
+        currentEvidenceDiv.innerHTML = `<a href="/static/uploads/${btn.dataset.evidence}" target="_blank">Current File</a>`;
+      } else {
+        currentEvidenceDiv.innerHTML = '';
+      }
+
+      document.getElementById('form-title').innerText = 'Edit Crime Record';
+      document.getElementById('submit-btn').innerText = 'Update';
+    });
+  });
+
+  // Handle status update with AJAX (no page refresh)
+  document.querySelectorAll('.update-status').forEach(btn => {
+    btn.addEventListener('click', async function (e) {
+      e.preventDefault();
+
+      const crimeId = this.dataset.crimeId;
+      const newStatus = this.dataset.newStatus;
+      const row = this.closest('tr');
+      const statusBadge = row.querySelector('.badge');
+
+      try {
+        const response = await fetch(`/police/update_crime_status/${crimeId}/${newStatus}`, {
+          method: 'GET',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Update badge immediately
+          statusBadge.textContent = newStatus;
+          statusBadge.className = 'badge bg-success';
+
+          // Show toast notification (fixed position, doesn't move table)
+          const toast = document.createElement('div');
+          toast.className = 'alert alert-success position-fixed bottom-0 end-0 m-3';
+          toast.style.zIndex = '9999';
+          toast.innerHTML = `✓ Status updated to "${newStatus}"<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+          document.body.appendChild(toast);
+
+          setTimeout(() => toast.remove(), 3000);
+        } else {
+          alert('Error updating status: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Error: ' + err);
+        console.error(err);
+      }
+    });
+  });
+</script>
+{% endblock %}

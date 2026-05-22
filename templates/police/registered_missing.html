@@ -1,0 +1,195 @@
+{% extends "police/base.html" %}
+{% block content %}
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title" id="form-title">📝 Missing Person Records</h3>
+  </div>
+
+  <style>
+    label {
+      color: #000000;
+      font-weight: 600;
+    }
+
+    input.form-control::placeholder,
+    textarea.form-control::placeholder {
+      color: #8b8383;
+    }
+
+    /* Horizontal scroll */
+    .table-scroll {
+      overflow-x: auto;
+      white-space: nowrap;
+      padding-bottom: 10px;
+    }
+
+    table.table {
+      min-width: 1400px;
+    }
+
+    .status-btn {
+      margin: 2px;
+    }
+  </style>
+
+  <!-- Database Table -->
+  <div class="row mt-3">
+    <div class="col-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Database</h4>
+
+          <div class="table-scroll">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Name</th>
+                  <th>Gender</th>
+                  <th>Age</th>
+                  <th>Height</th>
+                  <th>Weight</th>
+                  <th>Skin Tone</th>
+                  <th>Hair</th>
+                  <th>Last Seen</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th>Action</th> <!-- NEW -->
+                </tr>
+              </thead>
+
+              <tbody>
+                {% for person in persons %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ person.name }}</td>
+                  <td>{{ person.gender }}</td>
+                  <td>{{ person.age }}</td>
+                  <td>{{ person.height }}</td>
+                  <td>{{ person.weight }}</td>
+                  <td>{{ person.skintone }}</td>
+                  <td>{{ person.hair }}</td>
+                  <td>{{ person.last_seen }}</td>
+                  <td>{{ person.location }}</td>
+
+                  <td>
+                    <span class="badge bg-info">{{ person.status }}</span>
+                  </td>
+
+                  <!-- ACTION BUTTONS -->
+                  <td>
+                    <button class="btn btn-sm btn-primary status-btn update-status" data-person-id="{{ person.id }}"
+                      data-new-status="Investigating">Investigating</button>
+
+                    <button class="btn btn-sm btn-danger status-btn update-status" data-person-id="{{ person.id }}"
+                      data-new-status="Closed">Closed</button>
+                  </td>
+
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+
+
+<script>
+  // Fill form with data when clicking edit (only if form elements exist)
+  const editButtons = document.querySelectorAll('.edit-btn');
+  const formTitle = document.getElementById('form-title');
+  const submitBtn = document.getElementById('submit-btn');
+  const resetBtn = document.getElementById('reset-btn');
+  const personIdInput = document.getElementById('person_id');
+  const currentPhotoDiv = document.getElementById('current-photo');
+
+  if (editButtons.length && personIdInput) {
+    editButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        personIdInput.value = btn.dataset.id || '';
+        document.getElementById('personName').value = btn.dataset.name || '';
+        document.getElementById('gender').value = btn.dataset.gender || '';
+        document.getElementById('personAge').value = btn.dataset.age || '';
+        document.getElementById('height').value = btn.dataset.height || '';
+        document.getElementById('weight').value = btn.dataset.weight || '';
+        document.getElementById('skintone').value = btn.dataset.skintone || '';
+        document.getElementById('hair').value = btn.dataset.hair || '';
+        document.getElementById('lastSeen').value = btn.dataset.last_seen || '';
+        document.getElementById('location').value = btn.dataset.location || '';
+        document.getElementById('description').value = btn.dataset.description || '';
+        document.getElementById('status').value = btn.dataset.status || '';
+
+        if (btn.dataset.photo && currentPhotoDiv) {
+          currentPhotoDiv.innerHTML = `<img src="/static/uploads/${btn.dataset.photo}" alt="photo" width="100">`;
+        } else if (currentPhotoDiv) {
+          currentPhotoDiv.innerHTML = '';
+        }
+
+        if (formTitle) formTitle.innerText = "Edit Missing Person";
+        if (submitBtn) submitBtn.innerText = "Update";
+      });
+    });
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      if (personIdInput) personIdInput.value = '';
+      const form = document.querySelector('form');
+      if (form) form.reset();
+      if (formTitle) formTitle.innerText = "Register a Missing Person";
+      if (submitBtn) submitBtn.innerText = "Submit";
+      if (currentPhotoDiv) currentPhotoDiv.innerHTML = '';
+    });
+  }
+
+  // Handle status update with AJAX (no page refresh)
+  document.querySelectorAll('.update-status').forEach(btn => {
+    btn.addEventListener('click', async function (e) {
+      e.preventDefault();
+
+      const personId = this.dataset.personId;
+      const newStatus = this.dataset.newStatus;
+      const row = this.closest('tr');
+      const statusBadge = row.querySelector('.badge');
+
+      try {
+        const response = await fetch(`/police/update_missing_status/${personId}/${newStatus}`, {
+          method: 'GET',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Update badge immediately
+          statusBadge.textContent = newStatus;
+          statusBadge.className = 'badge bg-success';
+
+          // Show toast notification (fixed position, doesn't move table)
+          const toast = document.createElement('div');
+          toast.className = 'alert alert-success position-fixed bottom-0 end-0 m-3';
+          toast.style.zIndex = '9999';
+          toast.innerHTML = `✓ Status updated to "${newStatus}"<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+          document.body.appendChild(toast);
+
+          setTimeout(() => toast.remove(), 3000);
+        } else {
+          alert('Error updating status: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Error: ' + err);
+        console.error(err);
+      }
+    });
+  });
+</script>
+{% endblock %}

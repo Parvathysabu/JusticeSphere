@@ -1,0 +1,36 @@
+<!-- templates/user/crime_stats.html -->
+{% extends "user/base.html" %}
+{% block content %}
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title">Crime Statistics</h3>
+  </div>
+  <div class="row">
+    <div class="col-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Crime Data</h4>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Count</th>
+                <th>Hotspot</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for stat in stats %}
+              <tr>
+                <td>{{ stat.crime_type }}</td>
+                <td>{{ stat.count }}</td>
+                <td>{{ stat.hotspot }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

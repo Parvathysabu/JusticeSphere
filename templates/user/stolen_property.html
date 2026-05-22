@@ -1,0 +1,417 @@
+{% extends "user/base.html" %}
+{% block content %}
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title">💎 Stolen Property</h3>
+  </div>
+
+  <style>
+    label {
+      color: #000;
+      font-weight: 600;
+    }
+
+    input.form-control::placeholder,
+    textarea.form-control::placeholder {
+      color: #585151;
+    }
+
+    .required::after {
+      content: " *";
+      color: red;
+      font-weight: bold;
+    }
+
+    .evidence-preview img,
+    .evidence-preview video {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      border: 1px solid #ccc;
+      display: inline-block;
+    }
+
+    .evidence-item {
+      position: relative;
+      display: inline-block;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
+    .evidence-item img,
+    .evidence-item video {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .evidence-item .remove-evidence {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .evidence-item .remove-evidence:hover {
+      background: #c82333;
+    }
+
+    #preview-container {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px dashed #ccc;
+      border-radius: 6px;
+      min-height: 50px;
+      display: none;
+    }
+
+    #preview-container.has-files {
+      display: block;
+    }
+  </style>
+
+  <!-- 🧾 Stolen Property Registration -->
+  <div class="row mt-5">
+    <div class="col-md-12 mx-auto grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title mb-4" id="form-title">💎 Register Stolen Property</h4>
+
+          <form method="POST" action="/user/stolen_property" enctype="multipart/form-data" id="stolenForm">
+            <input type="hidden" name="prop_id" id="prop_id" value="">
+
+            <div class="row">
+              <div class="col-md-3">
+                <label class="required">Item Name</label>
+                <input type="text" class="form-control" id="itemName" name="item_name" placeholder="Item Name" required>
+              </div>
+              <div class="col-md-3">
+                <label class="required">Category</label>
+                <select class="form-control" id="category" name="category" required>
+                  <option value="" disabled selected>Select Category</option>
+                  <option value="electronics">Electronics</option>
+                  <option value="vehicle">Vehicle</option>
+                  <option value="jewelry">Jewelry</option>
+                  <option value="documents">Documents</option>
+                  <option value="furniture">Furniture</option>
+                  <option value="clothing">Clothing</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label>Serial / ID Number</label>
+                <input type="text" class="form-control" id="serial" name="serial_number"
+                  placeholder="Serial / ID (if any)">
+              </div>
+              <div class="col-md-3">
+                <label class="required">Date Stolen</label>
+                <input type="datetime-local" class="form-control" id="dateStolen" name="date_stolen" required>
+              </div>
+            </div>
+
+            <br>
+            <div class="row">
+              <div class="col-md-3">
+                <label class="required">Location</label>
+                <input type="text" class="form-control" id="location" name="location" placeholder="Location" required>
+              </div>
+              <div class="col-md-3">
+                <label>Estimated Value (₹)</label>
+                <input type="number" step="0.01" class="form-control" id="value" name="estimated_value"
+                  placeholder="Estimated Value (₹)">
+              </div>
+              <div class="col-md-3">
+                <label class="required">Owner Contact</label>
+                <input type="text" class="form-control" id="ownerContact" name="owner_contact"
+                  placeholder="Owner Contact" required>
+              </div>
+              <!-- <div class="col-md-3">
+                <label class="required">Status</label>
+                <select class="form-control" id="status" name="status" required>
+                  <option value="" disabled selected>Select Status</option>
+                  <option value="reported">Reported</option>
+                </select>
+              </div> -->
+            </div>
+
+            <br>
+            <div class="row">
+              <div class="col-md-6">
+                <label>Upload Evidence (Images/Videos)</label>
+                <input type="file" class="form-control" id="evidenceInput" name="evidence[]" multiple
+                  accept="image/*,video/*">
+                <small class="text-muted">Supported: JPG, PNG, MP4, AVI, MOV. <b>Video size must be less than
+                    15MB.</b></small>
+
+                <!-- Preview Container -->
+                <div id="preview-container"></div>
+              </div>
+              <div class="col-md-6">
+                <label>Description / Identifying Features</label>
+                <textarea class="form-control" id="description" name="description" rows="4"
+                  placeholder="Description / Identifying features..."></textarea>
+              </div>
+            </div>
+
+            <br>
+            <div>
+              <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">Submit</button>
+              <button type="button" class="btn btn-secondary btn-lg" id="cancel-btn" style="display:none;"
+                onclick="resetForm()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔍 Property Table -->
+  <div class="row mt-4">
+    <div class="col-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Stolen Items Database</h4>
+          <div style="overflow-x: auto;">
+            <table class="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Category</th>
+                  <th>Serial</th>
+                  <th>Date Stolen</th>
+                  <th>Location</th>
+                  <th>Value (₹)</th>
+                  <th>Owner</th>
+                  <th>Status</th>
+                  <th>Evidence</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for p in properties %}
+                <tr>
+                  <td>{{ p.item_name }}</td>
+                  <td>{{ p.category | capitalize }}</td>
+                  <td>{{ p.serial_number or '-' }}</td>
+                  <td>{{ p.date_stolen }}</td>
+                  <td>{{ p.location }}</td>
+                  <td>{{ '₹{:,.2f}'.format(p.estimated_value) if p.estimated_value else '-' }}</td>
+                  <td>{{ p.owner_contact }}</td>
+                  <!-- <td>
+                    <span class="badge 
+                      {% if p.status == 'reported' %}badge-warning
+                      {% elif p.status == 'investigating' %}badge-info
+                      {% elif p.status == 'recovered' %}badge-success
+                      {% elif p.status == 'closed' %}badge-secondary{% endif %}">
+                      {{ p.status | capitalize }}
+                    </span>
+                  </td> -->
+                  <td style="color: red;">{{ p.status }}</td>
+                  <td>
+                    {% if p.evidences %}
+                    <div class="evidence-preview">
+                      {% for e in p.evidences %}
+                      {% if e.endswith(('.jpg', '.png', '.jpeg', '.gif', '.bmp')) %}
+                      <a href="{{ url_for('static', filename='uploads/stolen/' ~ e) }}" target="_blank">
+                        <img src="{{ url_for('static', filename='uploads/stolen/' ~ e) }}" alt="Evidence">
+                      </a>
+                      {% elif e.endswith(('.mp4', '.avi', '.mov', '.wmv', '.flv')) %}
+                      <a href="{{ url_for('static', filename='uploads/stolen/' ~ e) }}" target="_blank">
+                        <video controls>
+                          <source src="{{ url_for('static', filename='uploads/stolen/' ~ e) }}"
+                            type="video/{{ e.split('.')[-1] }}">
+                        </video>
+                      </a>
+                      {% else %}
+                      <a href="{{ url_for('static', filename='uploads/stolen/' ~ e) }}" target="_blank">{{ e }}</a><br>
+                      {% endif %}
+                      {% endfor %}
+                    </div>
+                    {% else %}
+                    <span class="text-muted">No Evidence</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-warning edit-btn" data-id="{{ p.id }}"
+                      data-item_name="{{ p.item_name }}" data-category="{{ p.category }}"
+                      data-serial="{{ p.serial_number or '' }}" data-date_stolen="{{ p.date_stolen }}"
+                      data-location="{{ p.location }}" data-value="{{ p.estimated_value or '' }}"
+                      data-owner_contact="{{ p.owner_contact }}" data-description="{{ p.description or '' }}"
+                      data-status="{{ p.status }}">
+                      Edit
+                    </button>
+
+                    <form method="POST" action="{{ url_for('delete_stolen_property', prop_id=p.id) }}"
+                      style="display:inline;" onsubmit="return confirm('Delete this property and evidences?');">
+                      <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SCRIPTS ================= -->
+<script>
+  let selectedFiles = [];
+
+  document.addEventListener("DOMContentLoaded", function () {
+
+    // FILE PREVIEW
+    const evidenceInput = document.getElementById('evidenceInput');
+    const previewContainer = document.getElementById('preview-container');
+
+    evidenceInput.addEventListener('change', function (e) {
+      const files = Array.from(e.target.files);
+      const MAX_VIDEO_SIZE = 15 * 1024 * 1024; // 15MB
+
+      let hasOversized = false;
+      selectedFiles = files.filter(file => {
+        if (file.type.startsWith('video/') && file.size > MAX_VIDEO_SIZE) {
+          hasOversized = true;
+          return false;
+        }
+        return true;
+      });
+
+      if (hasOversized) {
+        alert("One or more videos exceed the 15MB limit and have been removed.");
+        updateFileInput();
+      }
+
+      updatePreview();
+    });
+
+    function updatePreview() {
+      previewContainer.innerHTML = '';
+
+      if (selectedFiles.length === 0) {
+        previewContainer.classList.remove('has-files');
+        return;
+      }
+
+      previewContainer.classList.add('has-files');
+
+      selectedFiles.forEach((file, index) => {
+        const item = document.createElement('div');
+        item.className = 'evidence-item';
+
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+          if (file.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            item.appendChild(img);
+          } else if (file.type.startsWith('video/')) {
+            const video = document.createElement('video');
+            video.src = e.target.result;
+            video.controls = false;
+            item.appendChild(video);
+          }
+
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'remove-evidence';
+          removeBtn.innerHTML = '×';
+          removeBtn.type = 'button';
+          removeBtn.onclick = function () {
+            selectedFiles.splice(index, 1);
+            updateFileInput();
+            updatePreview();
+          };
+
+          item.appendChild(removeBtn);
+        };
+
+        reader.readAsDataURL(file);
+        previewContainer.appendChild(item);
+      });
+    }
+
+    function updateFileInput() {
+      const dt = new DataTransfer();
+      selectedFiles.forEach(file => dt.items.add(file));
+      evidenceInput.files = dt.files;
+    }
+
+    // EDIT BUTTON FUNCTIONALITY
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const data = this.dataset;
+
+        document.getElementById('form-title').textContent = '✏️ Edit Stolen Property';
+        document.getElementById('prop_id').value = data.id;
+        document.getElementById('itemName').value = data.item_name;
+        document.getElementById('category').value = data.category;
+        document.getElementById('serial').value = data.serial;
+
+        // Handle datetime format
+        let dateValue = data.date_stolen;
+        if (dateValue && !dateValue.includes('T')) {
+          dateValue = dateValue.replace(' ', 'T');
+        }
+        document.getElementById('dateStolen').value = dateValue;
+
+        document.getElementById('location').value = data.location;
+        document.getElementById('value').value = data.value;
+        document.getElementById('ownerContact').value = data.owner_contact;
+        document.getElementById('description').value = data.description;
+        document.getElementById('status').value = data.status;
+
+        document.getElementById('submit-btn').textContent = 'Update';
+        document.getElementById('cancel-btn').style.display = 'inline-block';
+
+        // Scroll to form
+        document.getElementById('stolenForm').scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+
+    // Form Submission Validation
+    document.getElementById('stolenForm').addEventListener('submit', function (e) {
+      const files = selectedFiles;
+      const MAX_VIDEO_SIZE = 15 * 1024 * 1024; // 15MB
+      const oversized = files.find(file => file.type.startsWith('video/') && file.size > MAX_VIDEO_SIZE);
+
+      if (oversized) {
+        e.preventDefault();
+        alert("Please ensure all videos are under 15MB.");
+      }
+    });
+
+  });
+
+  function resetForm() {
+    document.getElementById('stolenForm').reset();
+    document.getElementById('form-title').textContent = '💎 Register Stolen Property';
+    document.getElementById('prop_id').value = '';
+    document.getElementById('submit-btn').textContent = 'Submit';
+    document.getElementById('cancel-btn').style.display = 'none';
+    selectedFiles = [];
+    document.getElementById('preview-container').innerHTML = '';
+    document.getElementById('preview-container').classList.remove('has-files');
+  }
+</script>
+{% endblock %}

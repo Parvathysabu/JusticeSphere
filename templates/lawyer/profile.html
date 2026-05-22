@@ -1,0 +1,247 @@
+{% extends "lawyer/base.html" %}
+{% block content %}
+<style>
+  .preview-container {
+    position: relative;
+    width: 120px;
+    margin-top: 15px;
+    display: none;
+  }
+
+  #newImagePreview {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 2px dashed #2196F3;
+  }
+
+  .remove-img-btn {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #d32f2f;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+</style>
+<div class="content-wrapper">
+
+  <div class="page-header">
+    <h3 class="page-title">My Profile</h3>
+  </div>
+
+  <div class="row">
+
+    <!-- LEFT SIDE PROFILE -->
+    <div class="col-md-4 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body text-center">
+
+          <!-- Profile Image -->
+          <img id="profilePreview" src="
+          {% if lawyer and lawyer.image %}
+          {{ url_for('static', filename='uploads/lawyers/' ~ lawyer.image) }}
+          {% else %}
+          {{ url_for('static', filename='dash/images/faces/img1.jpg') }}
+          {% endif %}
+          " class="img-lg rounded-circle mb-3" style="width:150px;height:150px;object-fit:cover;" />
+
+          <h4 class="card-title">{{ lawyer.full_name if lawyer else session['username'] }}</h4>
+          <p class="card-title mb-3">Lawyer</p>
+
+          <div class="card mt-3">
+            <div class="card-body">
+
+              <h4 class="card-title mb-3">Profile Details</h4>
+
+              <p><strong>Name:</strong> {{ lawyer.full_name if lawyer else 'Not available' }}</p>
+              <p><strong>Email:</strong> {{ lawyer.email if lawyer else 'Not available' }}</p>
+              <p><strong>Country:</strong> {{ lawyer.country_code if lawyer else 'Not available' }}</p>
+              <p><strong>Phone:</strong> {{ lawyer.phone if lawyer else 'Not available' }}</p>
+              <p><strong>Specialization:</strong> {{ lawyer.specialization if lawyer else 'Not available' }}</p>
+              <p><strong>Fees:</strong> ₹{{ lawyer.fees if lawyer else 'N/A' }}</p>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <!-- RIGHT SIDE EDIT -->
+    <div class="col-md-8 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+
+          <h4 class="card-title mb-4">Edit Profile</h4>
+
+          <form method="POST" action="{{ url_for('lawyer_profile') }}" enctype="multipart/form-data">
+
+            <!-- NAME -->
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" class="form-control" name="full_name" value="{{ lawyer.full_name if lawyer else '' }}"
+                required>
+            </div>
+
+
+            <!-- EMAIL -->
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" class="form-control" name="email" value="{{ lawyer.email if lawyer else '' }}"
+                required>
+              <small style="color:red;">Email must contain @</small>
+            </div>
+
+            <!-- COUNTRY -->
+            <div class="form-group">
+              <label>Country</label>
+              <select name="country_code" class="form-control" required>
+                <option value="">Select Country</option>
+                {% set cc = lawyer.country_code if lawyer else '' %}
+                <option value="+91" {% if cc == '+91' %}selected{% endif %}>🇮🇳 India +91</option>
+                <option value="+1" {% if cc == '+1' %}selected{% endif %}>🇺🇸 USA +1</option>
+                <option value="+44" {% if cc == '+44' %}selected{% endif %}>🇬🇧 UK +44</option>
+                <option value="+971" {% if cc == '+971' %}selected{% endif %}>🇦🇪 UAE +971</option>
+              </select>
+            </div>
+
+
+            <!-- PHONE -->
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="text" class="form-control" name="phone" pattern="[0-9]{10}" maxlength="10"
+                placeholder="Enter 10 digit phone number" value="{{ lawyer.phone if lawyer else '' }}" required>
+              <small style="color:red;">Enter 10 digit phone number</small>
+            </div>
+
+            
+
+
+            <!-- SPECIALIZATION -->
+            <div class="form-group">
+              <label>Specialization</label>
+
+              <select class="form-control" name="specialization" required>
+
+                <option disabled>Select Specialization</option>
+
+                {% set sp = lawyer.specialization if lawyer else '' %}
+
+                {% for s in [
+                'Criminal Lawyer',
+                'Civil Lawyer',
+                'Family Lawyer',
+                'Corporate Lawyer',
+                'Cybercrime Lawyer',
+                'Property Lawyer',
+                'Human Rights Lawyer'
+                ] %}
+
+                <option value="{{ s }}" {% if sp==s %}selected{% endif %}>
+                  {{ s }}
+                </option>
+
+                {% endfor %}
+
+              </select>
+            </div>
+
+
+            <!-- FEES -->
+            <div class="form-group">
+              <label>Fees (₹)</label>
+              <input type="number" class="form-control" name="fees" value="{{ lawyer.fees if lawyer else '' }}">
+            </div>
+
+
+            <!-- IMAGE -->
+            <div class="form-group">
+
+              <label>Profile Image (JPG or PNG)</label>
+
+              <input type="file" class="form-control" name="image" id="imageInput" accept=".jpg,.jpeg,.png"
+                onchange="previewImage(this)">
+
+              <small style="color:red;">Only JPG or PNG images allowed</small>
+
+              <div class="preview-container" id="previewContainer">
+                <img id="newImagePreview" src="" alt="Image Preview">
+                <button type="button" class="remove-img-btn" onclick="removeImage()">✖</button>
+              </div>
+
+            </div>
+
+
+            <button type="submit" class="btn btn-primary mt-3">
+              Update Profile
+            </button>
+
+          </form>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- IMAGE PREVIEW SCRIPT -->
+<script>
+  function previewImage(input) {
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const fileName = file.name.toLowerCase();
+
+      // Validate file type
+      if (!(fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.png'))) {
+        alert("Only JPG or PNG images are allowed.");
+        input.value = ""; // Clear input
+        document.getElementById('previewContainer').style.display = 'none';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        // Update the main profile picture preview (left side)
+        // document.getElementById('profilePreview').src = e.target.result;
+
+        // Show the small preview with cross button (right side)
+        const previewContainer = document.getElementById('previewContainer');
+        const newImagePreview = document.getElementById('newImagePreview');
+        newImagePreview.src = e.target.result;
+        previewContainer.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function removeImage() {
+    const input = document.getElementById('imageInput');
+    const previewContainer = document.getElementById('previewContainer');
+    const profilePreview = document.getElementById('profilePreview');
+
+    // Clear the file input
+    input.value = "";
+
+    // Hide the small preview
+    previewContainer.style.display = 'none';
+
+    // Reset the main profile preview to the original image (if available)
+    // profilePreview.src = "{% if lawyer and lawyer.image %}{{ url_for('static', filename='uploads/lawyers/' ~ lawyer.image) }}{% else %}{{ url_for('static', filename='dash/images/faces/img1.jpg') }}{% endif %}";
+  }
+</script>
+
+{% endblock %}

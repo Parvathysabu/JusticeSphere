@@ -1,0 +1,231 @@
+{% extends "admin/base.html" %}
+{% block content %}
+
+<style>
+/* =======================
+   PROFESSIONAL DASHBOARD
+======================= */
+
+.page-title {
+  font-weight: 700;
+  font-size: 24px;
+}
+
+.stat-card {
+  border: none;
+  border-radius: 15px;
+  transition: 0.3s ease;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: white;
+  margin: 0 auto 15px;
+}
+
+.gradient-blue { background: linear-gradient(135deg,#4facfe,#00f2fe); }
+.gradient-red { background: linear-gradient(135deg,#ff512f,#dd2476); }
+.gradient-yellow { background: linear-gradient(135deg,#f7971e,#ffd200); }
+.gradient-green { background: linear-gradient(135deg,#43cea2,#185a9d); }
+
+.chart-card {
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+  border: none;
+}
+
+.chart-container {
+  position: relative;
+  height: 350px;
+  width: 100%;
+}
+</style>
+
+<div class="content-wrapper">
+  <div class="page-header mb-4">
+    <h3 class="page-title">Admin Dashboard</h3>
+  </div>
+
+  <div class="row">
+
+    <!-- Lawyers -->
+    <div class="col-xl-3 col-lg-6 mb-4">
+      <a href="{{ url_for('registered_lawyers') }}" style="text-decoration:none;color:inherit;">
+        <div class="card stat-card text-center p-4">
+          <div class="stat-icon gradient-blue">
+            <i class="mdi mdi-account-multiple"></i>
+          </div>
+          <h5>Total Lawyers</h5>
+          <h2 class="font-weight-bold">{{ lawyer_count }}</h2>
+        </div>
+      </a>
+    </div>
+
+    <!-- Crimes -->
+    <div class="col-xl-3 col-lg-6 mb-4">
+      <a href="{{ url_for('registered_users') }}" style="text-decoration:none;color:inherit;">
+        <div class="card stat-card text-center p-4">
+          <div class="stat-icon gradient-red">
+            <i class="mdi mdi-alert-octagon"></i>
+          </div>
+          <h5>Registered Users</h5>
+          <h2 class="font-weight-bold">{{ crime_count }}</h2>
+        </div>
+      </a>
+    </div>
+
+    <!-- Missing -->
+    <!-- <div class="col-xl-3 col-lg-6 mb-4">
+      <a href="{{ url_for('registered_missing') }}" style="text-decoration:none;color:inherit;">
+        <div class="card stat-card text-center p-4">
+          <div class="stat-icon gradient-yellow">
+            <i class="mdi mdi-account-search"></i>
+          </div>
+          <h5>Missing Persons</h5>
+          <h2 class="font-weight-bold">{{ missing_count }}</h2>
+        </div>
+      </a>
+    </div> -->
+
+    <!-- Property -->
+    <!-- <div class="col-xl-3 col-lg-6 mb-4">
+      <a href="{{ url_for('registered_stolenitem') }}" style="text-decoration:none;color:inherit;">
+        <div class="card stat-card text-center p-4">
+          <div class="stat-icon gradient-green">
+            <i class="mdi mdi-briefcase-check"></i>
+          </div>
+          <h5>Stolen Property</h5>
+          <h2 class="font-weight-bold">{{ property_count }}</h2>
+        </div>
+      </a>
+    </div> -->
+
+  </div>
+
+  <!-- Charts Section -->
+  <div class="row">
+
+    <!-- Line Chart -->
+    <div class="col-md-6 mb-4">
+      <div class="card chart-card p-4">
+        <h5 class="mb-4">Crimes Registered Over Time</h5>
+        <div class="chart-container">
+          <canvas id="lineChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Doughnut Chart -->
+    <div class="col-md-6 mb-4">
+      <div class="card chart-card p-4">
+        <h5 class="mb-4">Case Distribution</h5>
+        <div class="chart-container">
+          <canvas id="doughnutChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block page_js %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const months = {{ months | tojson | safe }};
+    const crimeValues = {{ crime_values | tojson | safe }};
+
+    const crimeCount = {{ crime_count or 0 }};
+    const missingCount = {{ missing_count or 0 }};
+    const propertyCount = {{ property_count or 0 }};
+
+    /* ================= LINE CHART ================= */
+
+    const ctx = document.getElementById("lineChart");
+
+    if (ctx && months.length > 0) {
+
+        const gradient = ctx.getContext("2d")
+            .createLinearGradient(0, 0, 0, 400);
+
+        gradient.addColorStop(0, "rgba(79,172,254,0.6)");
+        gradient.addColorStop(1, "rgba(0,242,254,0.05)");
+
+        new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: months,
+                datasets: [{
+                    label: "Crimes Registered",
+                    data: crimeValues,
+                    borderColor: "#4facfe",
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: "#fff",
+                    pointBorderColor: "#4facfe",
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    /* ================= DOUGHNUT CHART ================= */
+
+    const ctx2 = document.getElementById("doughnutChart");
+
+    if (ctx2) {
+        new Chart(ctx2, {
+            type: "doughnut",
+            data: {
+                labels: ["Crimes", "Missing", "Stolen Property"],
+                datasets: [{
+                    data: [crimeCount, missingCount, propertyCount],
+                    backgroundColor: [
+                        "#ff6384",
+                        "#ffcd56",
+                        "#36a2eb"
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "65%",
+                plugins: {
+                    legend: { position: "bottom" }
+                }
+            }
+        });
+    }
+
+});
+</script>
+
+{% endblock %}

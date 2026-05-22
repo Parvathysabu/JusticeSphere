@@ -1,0 +1,185 @@
+{% extends "user/base.html" %}
+{% block content %}
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title">Booking Status</h3>
+  </div>
+
+  <div class="row">
+    <div class="col-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">My Appointments</h4>
+
+          <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+              <tr>
+                <th>Lawyer Name</th>
+                <th>Specialization</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for appt in appointments %}
+              <tr>
+                <td>{{ appt.lawyer_name }}</td>
+                <td>{{ appt.specialization }}</td>
+                <td>{{ appt.category | capitalize }}</td>
+
+                <!-- Status Badge -->
+                <td>
+                  {% if appt.status == 'Approved' %}
+                    <span class="badge bg-success">Approved</span>
+                  {% elif appt.status == 'Rejected' %}
+                    <span class="badge bg-danger">Rejected</span>
+                  {% elif appt.status == 'Reschedule Request' %}
+                    <span class="badge bg-info">Reschedule Request</span>
+                  {% elif appt.status == 'Closed' %}
+                    <span class="badge bg-secondary">Closed</span>
+                  {% elif appt.status == 'First Hearing' %}
+                    <span class="badge bg-primary">First Hearing</span>
+                  {% elif appt.status == 'Second Hearing' %}
+                    <span class="badge bg-warning text-dark">Second Hearing</span>
+                  {% elif appt.status == 'Third Hearing' %}
+                    <span class="badge bg-dark">Third Hearing</span>
+                  {% elif appt.status == 'Final Hearing' %}
+                    <span class="badge bg-success">Final Hearing</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark">Requested</span>
+                  {% endif %}
+                </td>
+
+                <!-- Action / Case Tracking -->
+                <td>
+                  <div class="action-scroll">
+                  {% if appt.status == 'Approved' %}
+                      <p><strong>Lawyer Phone:</strong> {{ appt.phone }}</p>
+
+                  {% elif appt.status == 'Reschedule Request' %}
+                      <p class="mb-2"><strong>Proposed Time:</strong> {{ appt.appointment_datetime }}</p>
+                      <form method="POST" action="{{ url_for('respond_reschedule', appointment_id=appt.id) }}" style="display:inline;">
+                        <button type="submit" name="response" value="accept" class="btn btn-sm btn-success">Accept</button>
+                        <button type="submit" name="response" value="decline" class="btn btn-sm btn-danger">Decline</button>
+                      </form>
+
+                  {% elif appt.status == 'Rejected' %}
+                      <a href="{{ url_for('book_appointment', category=appt.category) }}" 
+                        class="btn btn-sm btn-primary">
+                          Book Another Lawyer
+                      </a>
+
+                  {% elif appt.status == 'Closed' %}
+                      <p>Case Closed</p>
+
+                  {% elif appt.status in ['First Hearing', 'Second Hearing', 'Third Hearing', 'Final Hearing'] %}
+                      <!-- Timeline -->
+                      <div class="timeline-container">
+                        <div class="timeline">
+
+                          {% set steps = ['Requested','Approved','First Hearing','Second Hearing','Third Hearing','Final Hearing','Closed'] %}
+                          {% for step in steps %}
+                            <div class="timeline-step {% if steps.index(step) <= steps.index(appt.status) %}active{% endif %}">
+                              <div class="circle">{{ loop.index }}</div>
+                              <p>{{ step }}</p>
+                            </div>
+                          {% endfor %}
+
+                        </div>
+                      </div>
+                  {% else %}
+                      <span class="text-muted">Awaiting Response</span>
+                  {% endif %}
+                  </div>
+                </td>
+
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="5" class="text-center text-muted">No appointments found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Timeline CSS -->
+<style>
+.action-scroll {
+    max-width: 280px;      /* adjust width as needed */
+    overflow-x: auto;      /* horizontal scroll */
+    white-space: nowrap;   /* keep buttons in one line */
+}
+
+.action-scroll button,
+.action-scroll form {
+    display: inline-block;
+    margin-right: 5px;     /* space between buttons */
+}
+
+.timeline-container {
+    margin-top: 10px;
+    padding: 10px 5px;
+}
+.timeline {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    gap: 60px;
+    background: none !important;
+}
+.timeline::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #ddd;
+    z-index: 1;
+}
+
+/* ADD THIS TO DISABLE IT */
+.timeline::before {
+    display: none !important;
+}
+.timeline-step {
+    text-align: center;
+    flex: none;
+    position: relative;
+    width: 14%;
+}
+.timeline-step .circle {
+    width: 30px;
+    height: 30px;
+    background: #c9c9c9;
+    color: #fff;
+    border-radius: 50%;
+    margin: 0 auto;
+    line-height: 30px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+.timeline-step.active .circle {
+    background: #28a745;
+    transform: scale(1.1);
+}
+.timeline-step p {
+    margin-top: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+}
+.timeline-step.active p {
+    color: #28a745;
+}
+</style>
+
+{% endblock %}

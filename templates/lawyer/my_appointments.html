@@ -1,0 +1,248 @@
+{% extends "lawyer/base.html" %}
+{% block title %}Appointments{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title">My Appointments</h3>
+  </div>
+
+  <table class="table table-bordered table-hover align-middle">
+    <thead class="bg-primary text-white">
+      <tr>
+        <th>Client Name</th>
+        <th>Phone</th>
+        <th>Appointment Date</th>
+        <th>Appointment Time</th>
+        <th>Case Details</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for appt in appointments %}
+      <tr>
+        <td>{{ appt.client_name }}</td>
+        <td>{{ appt.phone }}</td>
+        <td>{{ appt.appointment_date }}</td>
+        <td>{{ appt.appointment_time }}</td>
+        <td>
+          <button class="btn btn-info btn-sm view-details" data-category="{{ appt.category }}"
+            data-caseid="{{ appt.case_id }}">
+            View Details
+          </button>
+        </td>
+        <td>
+          <span
+            class="badge {% if appt.status == 'Approved' %}bg-success{% elif appt.status == 'Rejected' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+            {{ appt.status }}
+          </span>
+        </td>
+        <td>
+          {% if appt.status|lower == 'request' %}
+          <form action="{{ url_for('update_appointment_status') }}" method="POST" style="display:inline;">
+            <input type="hidden" name="appointment_id" value="{{ appt.appointment_id }}">
+            <button type="submit" name="status" value="Approved" class="btn btn-success btn-sm">Approve</button>
+            <button type="button" class="btn btn-danger btn-sm reject-btn"
+              data-appointment-id="{{ appt.appointment_id }}" data-client-name="{{ appt.client_name }}">Reject</button>
+          </form>
+          {% else %}
+          <span class="text-muted">No action</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal for Case Details -->
+<div class="modal fade" id="caseDetailsModal" tabindex="-1" aria-labelledby="caseDetailsLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="caseDetailsLabel">Case Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="case-details-content">Loading...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for Rejection Reason -->
+<div class="modal fade" id="rejectionReasonModal" tabindex="-1" aria-labelledby="rejectionReasonLabel"
+  aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="rejectionReasonLabel">Reject Appointment</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="rejectionForm" action="{{ url_for('update_appointment_status') }}" method="POST">
+        <div class="modal-body">
+          <input type="hidden" name="appointment_id" id="rejectionAppointmentId">
+          <input type="hidden" name="status" value="Rejected">
+
+          <div class="mb-3">
+            <label for="rejectionReason" class="form-label">Rejection Reason</label>
+            <textarea class="form-control" id="rejectionReason" name="rejection_reason" rows="4"
+              placeholder="Please explain why you're rejecting this appointment..." required></textarea>
+          </div>
+
+          <div id="rescheduleSection">
+            <hr>
+            <div class="alert alert-info">
+              <strong>Would you like to reschedule this appointment?</strong>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="rescheduleCheckbox" name="reschedule">
+              <label class="form-check-label" for="rescheduleCheckbox">
+                Yes, suggest alternative date and time
+              </label>
+            </div>
+
+            <div id="rescheduleFields" style="display:none;">
+              <div class="mb-3">
+                <label for="newAppointmentDate" class="form-label">Preferred Date</label>
+                <input type="date" class="form-control" id="newAppointmentDate" name="new_appointment_date">
+              </div>
+
+              <div class="mb-3">
+                <label for="newAppointmentTime" class="form-label">Preferred Time</label>
+                <input type="time" class="form-control" id="newAppointmentTime" name="new_appointment_time">
+              </div>
+
+              <div class="mb-3">
+                <label for="rescheduleMessage" class="form-label">Message to Client (Optional)</label>
+                <textarea class="form-control" id="rescheduleMessage" name="reschedule_message" rows="3"
+                  placeholder="Let the client know about the new proposed time..."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Reject Appointment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.view-details').forEach(button => {
+    button.addEventListener('click', async () => {
+      const category = button.dataset.category;
+      const caseId = button.dataset.caseid;
+      const modalBody = document.getElementById('case-details-content');
+      modalBody.innerHTML = "Loading...";
+
+      try {
+        const res = await fetch(`/lawyer/case_details/${category}/${caseId}`);
+        const data = await res.json();
+
+        let html = '';
+        if (data.error) {
+          html = `<p class="text-danger">${data.error}</p>`;
+        } else {
+          html = '<table class="table table-striped">';
+          for (const [key, value] of Object.entries(data)) {
+            if (key === 'photo') {
+              // ignore
+            } else if (key === 'evidence_files' && Array.isArray(value) && value.length) {
+              html += `<tr><th>EVIDENCE</th><td>`;
+
+              // Map category to uploads folder
+              let folder = 'crime';
+              if (category === 'missing_person' || category === 'missing') folder = 'missing';
+              else if (category === 'stolen_property' || category === 'stolen') folder = 'stolen';
+
+              value.forEach(filename => {
+                const fullPath = `/static/uploads/${folder}/${filename}`;
+                const isVideo = filename.match(/\.(mp4|avi|mov|wmv|flv|mkv)$/i);
+
+                if (isVideo) {
+                  html += `<a href="${fullPath}" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1">
+                             <i class="mdi mdi-play"></i> Video
+                           </a>`;
+                } else {
+                  html += `<a href="${fullPath}" target="_blank">
+                             <img src="${fullPath}" width="70" height="70" class="rounded border me-1 mb-1" style="object-fit: cover;">
+                           </a>`;
+                }
+              });
+              html += `</td></tr>`;
+            } else if (['id', 'login_id', 'photo', 'evidence_files'].includes(key) || value === null || value === undefined || value === '') {
+              // Skip internal fields and empty/null values
+              continue;
+            } else {
+              html += `<tr><th>${key.replace(/_/g, ' ').toUpperCase()}</th><td>${value || '-'}</td></tr>`;
+            }
+          }
+          html += '</table>';
+        }
+
+        modalBody.innerHTML = html;
+        new bootstrap.Modal(document.getElementById('caseDetailsModal')).show();
+
+      } catch (err) {
+        modalBody.innerHTML = `<p class="text-danger">Error loading details.</p>`;
+        console.error(err);
+      }
+    });
+  });
+
+  // Rejection Modal Logic
+  document.querySelectorAll('.reject-btn').forEach(button => {
+    button.addEventListener('click', function () {
+      const appointmentId = this.dataset.appointmentId;
+      document.getElementById('rejectionAppointmentId').value = appointmentId;
+      document.getElementById('rejectionReason').value = '';
+      document.getElementById('rejectionForm').reset();
+      document.getElementById('rescheduleSection').style.display = 'block';
+      document.getElementById('rescheduleFields').style.display = 'none';
+
+      new bootstrap.Modal(document.getElementById('rejectionReasonModal')).show();
+    });
+  });
+
+
+
+  // Show/hide reschedule date/time fields
+  document.getElementById('rescheduleCheckbox').addEventListener('change', function () {
+    const rescheduleFields = document.getElementById('rescheduleFields');
+    rescheduleFields.style.display = this.checked ? 'block' : 'none';
+
+    // Set minimum date to today
+    if (this.checked) {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('newAppointmentDate').min = today;
+    }
+  });
+
+  // Form validation before submission
+  document.getElementById('rejectionForm').addEventListener('submit', function (e) {
+    const reason = document.getElementById('rejectionReason').value.trim();
+    const rescheduleChecked = document.getElementById('rescheduleCheckbox').checked;
+    const newDate = document.getElementById('newAppointmentDate').value;
+    const newTime = document.getElementById('newAppointmentTime').value;
+
+    if (!reason) {
+      e.preventDefault();
+      alert('Please provide a rejection reason.');
+      return;
+    }
+
+    if (rescheduleChecked && (!newDate || !newTime)) {
+      e.preventDefault();
+      alert('Please provide both date and time for rescheduling.');
+      return;
+    }
+  });
+</script>
+
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="content-wrapper">
+
+  <div class="page-header">
+    <h3 class="page-title">📋 Pending Hearing Status Updates</h3>
+  </div>
+
+  <style>
+    label {
+      color: #000000;
+      font-weight: 600;
+    }
+
+    input.form-control::placeholder,
+    textarea.form-control::placeholder {
+      color: #8b8383;
+    }
+
+    .status-btn {
+      margin: 2px;
+    }
+
+    .action-scroll {
+      max-width: 250px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .action-scroll form,
+    .action-scroll button {
+      display: inline-block !important;
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+
+    .pending-badge {
+      background-color: #FFC107;
+      color: #000;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    /* Horizontal Scroll */
+    .table-scroll {
+      overflow-x: auto;
+      white-space: nowrap;
+      padding-bottom: 10px;
+    }
+
+    table.table {
+      width: 100%;
+      min-width: 1600px;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+    }
+  </style>
+
+  <!-- Hearing Status Updates Table -->
+  <div class="row mt-4">
+    <div class="col-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Pending Hearing Status Updates</h4>
+
+          {% if pending_updates %}
+          <!-- Horizontal Scroll Wrapper -->
+          <div class="table-scroll">
+            <table class="table table-bordered table-hover">
+              <thead class="thead-dark">
+                <tr>
+                  <th>ID</th>
+                  <th>Client Name</th>
+                  <th>Phone</th>
+                  <th>Category</th>
+                  <th>Lawyer Name</th>
+                  <th>Appointment Date</th>
+                  <th>Appointment Time</th>
+                  <th>Requested Status</th>
+                  <th>Requested On</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for update in pending_updates %}
+                <tr>
+                  <td><strong>{{ update.id }}</strong></td>
+                  <td>{{ update.client_name }}</td>
+                  <td>{{ update.client_phone }}</td>
+                  <td>
+                    <span class="badge bg-info">{{ update.category }}</span>
+                  </td>
+                  <td>{{ update.lawyer_name }}</td>
+                  <td>{{ update.appointment_date }}</td>
+                  <td>{{ update.appointment_time }}</td>
+                  <td>
+                    <span class="pending-badge">{{ update.requested_status }}</span>
+                  </td>
+                  <td>{{ update.created_at.strftime('%b %d, %Y %h:%M %p') if update.created_at else 'N/A' }}</td>
+                  <td class="action-scroll">
+                    <!-- Approve Button -->
+                    <form method="POST" action="{{ url_for('approve_hearing_update', update_id=update.id) }}"
+                      style="display: inline-block;">
+                      <button type="submit" class="btn btn-sm btn-success"
+                        onclick="return confirm('Are you sure you want to approve this hearing status update?')">
+                        ✓ Approve
+                      </button>
+                    </form>
+
+                    <!-- Reject Button with Modal -->
+                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                      data-bs-target="#rejectModal{{ update.id }}">
+                      ✕ Reject
+                    </button>
+                  </td>
+                </tr>
+
+                <!-- Reject Modal for each update -->
+                <div class="modal fade" id="rejectModal{{ update.id }}" tabindex="-1">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">Reject Hearing Status Update</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                      </div>
+                      <form method="POST" action="{{ url_for('reject_hearing_update', update_id=update.id) }}">
+                        <div class="modal-body">
+                          <p><strong>Update ID:</strong> {{ update.id }}</p>
+                          <p><strong>Client:</strong> {{ update.client_name }}</p>
+                          <p><strong>Lawyer:</strong> {{ update.lawyer_name }}</p>
+                          <p><strong>Requested Status:</strong> {{ update.requested_status }}</p>
+                          <div class="form-group mt-3">
+                            <label for="reason{{ update.id }}"><strong>Rejection Reason</strong></label>
+                            <textarea class="form-control" id="reason{{ update.id }}" name="rejection_reason"
+                              placeholder="Explain why you're rejecting this update..." required></textarea>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                          <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="alert alert-info">
+            <strong>✓ All Clear!</strong> No pending hearing status updates at the moment.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

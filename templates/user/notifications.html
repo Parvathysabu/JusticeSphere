@@ -1,0 +1,59 @@
+{% extends "user/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h3 class="mb-4">
+        <i class="mdi mdi-bell-outline"></i> Your Notifications
+    </h3>
+
+    {% if notifications %}
+        <div class="list-group">
+
+            {% for n in notifications %}
+            <a href="{{ url_for('booking_status') }}" class="list-group-item list-group-item-action shadow-sm mb-3 rounded">
+
+                <div class="d-flex justify-content-between">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            {% if n.is_read == 0 %}
+                                <i class="mdi mdi-bell-ring text-primary" style="font-size: 28px;"></i>
+                            {% else %}
+                                <i class="mdi mdi-bell-outline text-secondary" style="font-size: 28px;"></i>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <h6 class="mb-1 text-dark">{{ n.message }}</h6>
+                            <small class="text-muted">
+                                <i class="mdi mdi-clock-outline"></i> {{ n.created_at }}
+                            </small>
+                        </div>
+                    </div>
+
+                    {% if n.is_read == 0 %}
+                        <span class="badge bg-primary">New</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Read</span>
+                    {% endif %}
+                </div>
+
+            </a>
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+        <div class="alert alert-info text-center">
+            <i class="mdi mdi-bell-off-outline"></i>
+            No notifications found.
+        </div>
+    {% endif %}
+
+</div>
+
+<script>
+    // Mark all as read when page is viewed
+    fetch("/user/mark_all_read");
+</script>
+{% endblock %}

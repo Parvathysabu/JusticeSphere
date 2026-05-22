@@ -1,0 +1,52 @@
+{% extends "admin/base.html" %}
+{% block content %}
+
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title">Registered Lawyers</h3>
+  </div>
+
+  <div class="row">
+    <div class="col-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Lawyers List</h4>
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Full Name</th>
+                <th>Specialization</th>
+                <th>phone</th>
+                <th>Fees</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for lawyer in lawyers %}
+              <tr>
+                <td>{{ lawyer.id }}</td>
+                <td>{{ lawyer.full_name }}</td>
+                <td>{{ lawyer.specialization }}</td>
+                <td>{{ lawyer.phone}}</td>
+                <td>{{ lawyer.fees }}</td>
+                <td>
+                  <form action="{{ url_for('delete_lawyer', lawyer_id=lawyer.id) }}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="7" class="text-center">No registered lawyers found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,183 @@
+{% extends "police/base.html" %}
+{% block content %}
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title" id="form-title">📝 Stolen property</h3>
+  </div>
+
+  <style>
+    label {
+      color: #000000;
+      font-weight: 600;
+    }
+
+    input.form-control::placeholder,
+    textarea.form-control::placeholder {
+      color: #8b8383;
+    }
+
+    /* Horizontal Scroll */
+    .table-scroll {
+      overflow-x: auto;
+      white-space: nowrap;
+      padding-bottom: 10px;
+    }
+
+    table.table {
+      min-width: 1500px;
+    }
+
+    .status-btn {
+      margin: 2px;
+    }
+  </style>
+
+  <!-- Database Table -->
+  <div class="row mt-4">
+    <div class="col-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Stolen Items Database</h4>
+
+          <div class="table-scroll">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Item</th>
+                  <th>Category</th>
+                  <th>Serial</th>
+                  <th>Date Stolen</th>
+                  <th>Location</th>
+                  <th>Owner</th>
+                  <th>Status</th>
+                  <th>Action</th> <!-- NEW COLUMN -->
+                </tr>
+              </thead>
+
+              <tbody>
+                {% for p in properties %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ p.item_name }}</td>
+                  <td>{{ p.category }}</td>
+                  <td>{{ p.serial_number or '-' }}</td>
+                  <td>{{ p.date_stolen }}</td>
+                  <td>{{ p.location }}</td>
+                  <td>{{ p.owner_contact }}</td>
+
+                  <td>
+                    <span class="badge bg-info">{{ p.status }}</span>
+                  </td>
+
+                  <!-- ACTION BUTTONS -->
+                  <td>
+                    <button class="btn btn-sm btn-primary status-btn update-status" data-property-id="{{ p.id }}"
+                      data-new-status="Investigating">Investigating</button>
+
+                    <button class="btn btn-sm btn-danger status-btn update-status" data-property-id="{{ p.id }}"
+                      data-new-status="Closed">Closed</button>
+                  </td>
+
+                </tr>
+                {% endfor %}
+              </tbody>
+
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+
+
+<script>
+  // client-side fill-in for Edit (same pattern as missing person)
+  document.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('prop_id').value = btn.dataset.id || '';
+      document.getElementById('itemName').value = btn.dataset.item_name || '';
+      document.getElementById('category').value = btn.dataset.category || '';
+      document.getElementById('serial').value = btn.dataset.serial || '';
+      document.getElementById('dateStolen').value = btn.dataset.date_stolen || '';
+      document.getElementById('location').value = btn.dataset.location || '';
+      document.getElementById('value').value = btn.dataset.value || '';
+      document.getElementById('ownerContact').value = btn.dataset.owner_contact || '';
+      document.getElementById('description').value = btn.dataset.description || '';
+      document.getElementById('status').value = btn.dataset.status || 'reported';
+
+      const currentPhotoDiv = document.getElementById('current-photo');
+      if (btn.dataset.photo) {
+        currentPhotoDiv.innerHTML = `<img src="/static/uploads/${btn.dataset.photo}" width="100" alt="photo">`;
+      } else {
+        currentPhotoDiv.innerHTML = '';
+      }
+
+      document.getElementById('form-title').innerText = 'Edit Stolen Property';
+      document.getElementById('submit-btn').innerText = 'Update';
+    });
+  });
+
+  // reset behavior (only if form exists)
+  const resetBtn = document.getElementById('reset-btn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      document.getElementById('prop_id').value = '';
+      const form = document.querySelector('form');
+      if (form) form.reset();
+      const currentPhoto = document.getElementById('current-photo');
+      if (currentPhoto) currentPhoto.innerHTML = '';
+      const title = document.getElementById('form-title');
+      if (title) title.innerText = 'Register Stolen Property';
+      const submitBtn = document.getElementById('submit-btn');
+      if (submitBtn) submitBtn.innerText = 'Submit';
+    });
+  }
+
+  // Handle status update with AJAX (no page refresh)
+  document.querySelectorAll('.update-status').forEach(btn => {
+    btn.addEventListener('click', async function (e) {
+      e.preventDefault();
+      console.log('property status clicked', btn);
+
+      const propertyId = this.getAttribute('data-property-id');
+      const newStatus = this.getAttribute('data-new-status');
+      const row = this.closest('tr');
+      const statusBadge = row ? row.querySelector('.badge') : null;
+
+      try {
+        const response = await fetch(`/police/update_property_status/${propertyId}/${newStatus}`, {
+          method: 'GET',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+        if (!response.ok) throw new Error('Network response not ok');
+        const data = await response.json();
+        if (data.success) {
+          if (statusBadge) {
+            statusBadge.textContent = newStatus;
+            statusBadge.className = newStatus === 'Closed' ? 'badge bg-danger' : 'badge bg-warning';
+          }
+          const toast = document.createElement('div');
+          toast.className = 'alert alert-success position-fixed bottom-0 end-0 m-3';
+          toast.style.zIndex = '9999';
+          toast.innerHTML = `✓ Status updated to "${newStatus}"<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+          document.body.appendChild(toast);
+          setTimeout(() => toast.remove(), 3000);
+        } else {
+          alert('Error updating status: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Error: ' + err);
+        console.error('Property status update error:', err);
+      }
+    });
+  });
+</script>
+{% endblock %}

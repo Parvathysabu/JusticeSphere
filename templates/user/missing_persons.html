@@ -1,0 +1,435 @@
+{% extends "user/base.html" %}
+{% block content %}
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title">🧍‍♂️ Missing Persons</h3>
+  </div>
+
+  <style>
+    label {
+      color: #000;
+      font-weight: 600;
+    }
+
+    input.form-control::placeholder,
+    textarea.form-control::placeholder {
+      color: #beb2b2;
+    }
+
+    .required::after {
+      content: " *";
+      color: red;
+      font-weight: bold;
+    }
+
+    .evidence-preview img,
+    .evidence-preview video {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      border: 1px solid #ccc;
+      display: inline-block;
+    }
+
+    .evidence-item {
+      position: relative;
+      display: inline-block;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
+    .evidence-item img,
+    .evidence-item video {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .evidence-item .remove-evidence {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .evidence-item .remove-evidence:hover {
+      background: #c82333;
+    }
+
+    #preview-container {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px dashed #ccc;
+      border-radius: 6px;
+      min-height: 50px;
+      display: none;
+    }
+
+    #preview-container.has-files {
+      display: block;
+    }
+  </style>
+
+  <!-- 🧾 Missing Person Registration -->
+  <div class="row mt-5">
+    <div class="col-md-12 mx-auto grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title mb-4" id="form-title">🧍‍♂️ Register Missing Person</h4>
+
+          <form method="POST" action="/user/missing_persons" enctype="multipart/form-data" id="missingForm">
+            <input type="hidden" name="person_id" id="person_id" value="">
+
+            <div class="row">
+              <div class="col-md-3">
+                <label class="required">Full Name</label>
+                <input type="text" class="form-control" id="personName" name="name" placeholder="Full Name" required>
+              </div>
+              <div class="col-md-3">
+                <label class="required">Gender</label>
+                <select class="form-control" id="gender" name="gender" required>
+                  <option value="" disabled selected>Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="required">Age</label>
+                <input type="number" class="form-control" id="personAge" name="age" placeholder="Age" required>
+              </div>
+              <div class="col-md-3">
+                <label class="required">Height (cm)</label>
+                <input type="number" class="form-control" id="height" name="height" placeholder="Height (cm)" required>
+              </div>
+            </div>
+
+            <br>
+            <div class="row">
+              <div class="col-md-3">
+                <label class="required">Weight (kg)</label>
+                <input type="number" class="form-control" id="weight" name="weight" placeholder="Weight (kg)" required>
+              </div>
+              <div class="col-md-3">
+                <label class="required">Skin Tone</label>
+                <select class="form-control" id="skintone" name="skintone" required>
+                  <option value="" disabled selected>Select Skin Tone</option>
+                  <option value="fair">Fair</option>
+                  <option value="medium">Medium</option>
+                  <option value="dark">Dark</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="required">Hair Color</label>
+                <select class="form-control" id="hair" name="hair" required>
+                  <option value="" disabled selected>Select Hair Color</option>
+                  <option value="black">Black</option>
+                  <option value="brown">Brown</option>
+                  <option value="blonde">Blonde</option>
+                  <option value="red">Red</option>
+                  <option value="gray">Gray</option>
+                  <option value="white">White</option>
+                </select>
+              </div>
+            </div>
+
+            <br>
+            <div class="row">
+              <div class="col-md-4">
+                <label class="required">Last Seen Date & Time</label>
+                <input type="datetime-local" class="form-control" id="lastSeen" name="last_seen" required>
+              </div>
+              <div class="col-md-4">
+                <label class="required">Last Known Location</label>
+                <input type="text" class="form-control" id="location" name="location" placeholder="Last Known Location"
+                  required>
+              </div>
+              <!-- <div class="col-md-4">
+                <label class="required">Status</label>
+                <select class="form-control" id="status" name="status" required>
+                  <option value="" disabled selected>Select Status</option>
+                  <option value="reported">Reported</option>
+                </select>
+              </div> -->
+            </div>
+
+            <br>
+            <div class="row">
+              <div class="col-md-6">
+                <label>Additional Details</label>
+                <textarea class="form-control" id="description" name="description" rows="4"
+                  placeholder="Additional details (clothing, distinguishing marks, etc.)..."></textarea>
+              </div>
+              <div class="col-md-6">
+                <label>Upload Evidence (Images/Videos)</label>
+                <input type="file" class="form-control" id="evidenceInput" name="evidence[]" multiple
+                  accept="image/*,video/*">
+                <small class="text-muted">Supported: JPG, PNG, MP4, AVI, MOV. <b>Video size must be less than
+                    15MB.</b></small>
+
+                <!-- Preview Container -->
+                <div id="preview-container"></div>
+              </div>
+            </div>
+
+            <br>
+            <div>
+              <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">Submit</button>
+              <button type="button" class="btn btn-secondary btn-lg" id="cancel-btn" style="display:none;"
+                onclick="resetForm()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔍 Missing Persons Table -->
+  <div class="row mt-4">
+    <div class="col-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Database</h4>
+          <div style="overflow-x: auto;">
+            <table class="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Gender</th>
+                  <th>Age</th>
+                  <th>Height/Weight</th>
+                  <th>Location</th>
+                  <th>Last Seen</th>
+                  <th>Status</th>
+                  <th>Evidence</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for p in persons %}
+                <tr>
+                  <td>{{ p.name }}</td>
+                  <td>{{ p.gender | capitalize }}</td>
+                  <td>{{ p.age }}</td>
+                  <td>{{ p.height }}cm / {{ p.weight }}kg</td>
+                  <td>{{ p.location }}</td>
+                  <td>{{ p.last_seen }}</td>
+                  <!-- <td>
+                    <span class="badge 
+                      {% if p.status == 'reported' %}badge-warning
+                      {% elif p.status == 'investigating' %}badge-info
+                      {% elif p.status == 'found' %}badge-success
+                      {% elif p.status == 'closed' %}badge-secondary{% endif %}">
+                      {{ p.status | capitalize }}
+                    </span>
+                  </td> -->
+                  <td style="color: red;">{{ p.status }}</td>
+                  <td>
+                    {% if p.evidences %}
+                    <div class="evidence-preview">
+                      {% for e in p.evidences %}
+                      {% if e.endswith(('.jpg', '.png', '.jpeg', '.gif', '.bmp')) %}
+                      <a href="{{ url_for('static', filename='uploads/missing/' ~ e) }}" target="_blank">
+                        <img src="{{ url_for('static', filename='uploads/missing/' ~ e) }}" alt="Evidence">
+                      </a>
+                      {% elif e.endswith(('.mp4', '.avi', '.mov', '.wmv', '.flv')) %}
+                      <a href="{{ url_for('static', filename='uploads/missing/' ~ e) }}" target="_blank">
+                        <video controls>
+                          <source src="{{ url_for('static', filename='uploads/missing/' ~ e) }}"
+                            type="video/{{ e.split('.')[-1] }}">
+                        </video>
+                      </a>
+                      {% else %}
+                      <a href="{{ url_for('static', filename='uploads/missing/' ~ e) }}" target="_blank">{{ e }}</a><br>
+                      {% endif %}
+                      {% endfor %}
+                    </div>
+                    {% else %}
+                    <span class="text-muted">No Evidence</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <button type="button" class="btn btn-sm btn-warning edit-btn" data-id="{{ p.id }}"
+                      data-name="{{ p.name }}" data-gender="{{ p.gender }}" data-age="{{ p.age }}"
+                      data-height="{{ p.height }}" data-weight="{{ p.weight }}" data-skintone="{{ p.skintone }}"
+                      data-hair="{{ p.hair }}" data-last_seen="{{ p.last_seen }}" data-location="{{ p.location }}"
+                      data-status="{{ p.status }}" data-description="{{ p.description or '' }}">
+                      Edit
+                    </button>
+
+                    <form method="POST" action="{{ url_for('delete_missing_person', person_id=p.id) }}"
+                      style="display:inline;" onsubmit="return confirm('Delete record and evidences?');">
+                      <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SCRIPTS ================= -->
+<script>
+  let selectedFiles = [];
+
+  document.addEventListener("DOMContentLoaded", function () {
+
+    // FILE PREVIEW
+    const evidenceInput = document.getElementById('evidenceInput');
+    const previewContainer = document.getElementById('preview-container');
+
+    evidenceInput.addEventListener('change', function (e) {
+      const files = Array.from(e.target.files);
+      const MAX_VIDEO_SIZE = 15 * 1024 * 1024; // 15MB
+
+      let hasOversized = false;
+      selectedFiles = files.filter(file => {
+        if (file.type.startsWith('video/') && file.size > MAX_VIDEO_SIZE) {
+          hasOversized = true;
+          return false;
+        }
+        return true;
+      });
+
+      if (hasOversized) {
+        alert("One or more videos exceed the 15MB limit and have been removed.");
+        updateFileInput();
+      }
+
+      updatePreview();
+    });
+
+    function updatePreview() {
+      previewContainer.innerHTML = '';
+
+      if (selectedFiles.length === 0) {
+        previewContainer.classList.remove('has-files');
+        return;
+      }
+
+      previewContainer.classList.add('has-files');
+
+      selectedFiles.forEach((file, index) => {
+        const item = document.createElement('div');
+        item.className = 'evidence-item';
+
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+          if (file.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            item.appendChild(img);
+          } else if (file.type.startsWith('video/')) {
+            const video = document.createElement('video');
+            video.src = e.target.result;
+            video.controls = false;
+            item.appendChild(video);
+          }
+
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'remove-evidence';
+          removeBtn.innerHTML = '×';
+          removeBtn.type = 'button';
+          removeBtn.onclick = function () {
+            selectedFiles.splice(index, 1);
+            updateFileInput();
+            updatePreview();
+          };
+
+          item.appendChild(removeBtn);
+        };
+
+        reader.readAsDataURL(file);
+        previewContainer.appendChild(item);
+      });
+    }
+
+    function updateFileInput() {
+      const dt = new DataTransfer();
+      selectedFiles.forEach(file => dt.items.add(file));
+      evidenceInput.files = dt.files;
+    }
+
+    // EDIT BUTTON FUNCTIONALITY
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const data = this.dataset;
+
+        document.getElementById('form-title').textContent = '✏️ Edit Missing Person';
+        document.getElementById('person_id').value = data.id;
+        document.getElementById('personName').value = data.name;
+        document.getElementById('gender').value = data.gender;
+        document.getElementById('personAge').value = data.age;
+        document.getElementById('height').value = data.height;
+        document.getElementById('weight').value = data.weight;
+        document.getElementById('skintone').value = data.skintone;
+        document.getElementById('hair').value = data.hair;
+
+        // Handle datetime format
+        let dateValue = data.last_seen;
+        if (dateValue && !dateValue.includes('T')) {
+          dateValue = dateValue.replace(' ', 'T');
+        }
+        document.getElementById('lastSeen').value = dateValue;
+
+        document.getElementById('location').value = data.location;
+        document.getElementById('status').value = data.status;
+        document.getElementById('description').value = data.description;
+
+        document.getElementById('submit-btn').textContent = 'Update';
+        document.getElementById('cancel-btn').style.display = 'inline-block';
+
+        // Scroll to form
+        document.getElementById('missingForm').scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+
+    // Form Submission Validation
+    document.getElementById('missingForm').addEventListener('submit', function (e) {
+      const files = selectedFiles;
+      const MAX_VIDEO_SIZE = 15 * 1024 * 1024; // 15MB
+      const oversized = files.find(file => file.type.startsWith('video/') && file.size > MAX_VIDEO_SIZE);
+
+      if (oversized) {
+        e.preventDefault();
+        alert("Please ensure all videos are under 15MB.");
+      }
+    });
+
+  });
+
+  function resetForm() {
+    document.getElementById('missingForm').reset();
+    document.getElementById('form-title').textContent = '🧍‍♂️ Register Missing Person';
+    document.getElementById('person_id').value = '';
+    document.getElementById('submit-btn').textContent = 'Submit';
+    document.getElementById('cancel-btn').style.display = 'none';
+    selectedFiles = [];
+    document.getElementById('preview-container').innerHTML = '';
+    document.getElementById('preview-container').classList.remove('has-files');
+  }
+</script>
+{% endblock %}

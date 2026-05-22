@@ -1,0 +1,75 @@
+DETAILED PROJECT DOCUMENTATION - CRIME AWARENESS & LEGAL ADVOCATE
+================================================================
+
+1. PROJECT OVERVIEW
+-------------------
+The "Crime Awareness and Legal Advocate" system is a comprehensive web-based platform designed to bridge the gap between citizens, legal professionals, and law enforcement. It serves as a centralized hub for reporting crimes, tracking missing persons, registering stolen items, and obtaining expert legal guidance through AI-driven assistance and lawyer appointments.
+
+2. TECHNOLOGY STACK
+-------------------
+- Frontend: HTML5, Vanilla CSS, JavaScript (AJAX, jQuery), Jinja2 Templates.
+- Backend: Flask (Python-based Web Framework).
+- Database: MySQL (managed via PyMySQL).
+- AI/ML: Google Gemini API (gemini-2.0-flash / 2.5-flash) for Legal Chatbot and NL2SQL.
+- Security: Fernet Symmetric Encryption (Cryptography library) for file metadata.
+
+3. CORE ARCHITECTURE & USER ROLES
+---------------------------------
+The application follows a Role-Based Access Control (RBAC) architecture with four distinct dashboards:
+
+A. Citizen (User):
+   - Report crimes with evidence uploads (images/videos).
+   - Register missing persons and stolen property.
+   - Book appointments with specialized lawyers.
+   - Use the AI Legal Advocate Chatbot for legal advice and status checks.
+   - View real-time crime hotspot mapping.
+
+B. Lawyer:
+   - Manage professional profiles (specialization, fees).
+   - Review and manage client appointment requests.
+   - Update case/hearing statuses (verified by Admin).
+   - Access evidence provided by clients.
+
+C. Police:
+   - Monitor all registered crimes, missing persons, and stolen properties.
+   - Update investigation statuses.
+   - View crime trends and hotspot statistics to optimize patrolling.
+
+D. Admin (System Controller):
+   - Oversee the entire platform (User/Lawyer/Police management).
+   - Verify and approve hearing status updates from lawyers.
+   - Monitor system-wide statistics and dashboards.
+   - Manage core databases (lawyers, bar council numbers, police IDs).
+
+4. KEY FEATURES & MODULES
+-------------------------
+- Crime Hotspot Mapping: Geocodes crime reports and visualizes frequency across different locations using coordinates.
+- AI Legal Advocate: A dual-mode chatbot that performs NL2SQL to fetch real-time data from the DB or provides general legal knowledge on IPC/BNS sections.
+- Secure Evidence Vault: Encrypts file names using AES-based Fernet encryption before storing them, ensuring that sensitive evidence filenames are obfuscated.
+- Real-time Notifications: Automated system for notifying users about appointment status changes and hearing updates.
+- Automated Schema Management: An idempotent initialization algorithm that manages database migrations (adding columns/tables) automatically on app startup.
+
+5. DATABASE SCHEMA SUMMARY
+--------------------------
+Key tables include:
+- login: Authentication details and role management.
+- users, lawyers, police: Specific profiles for each role.
+- crimes, missing_persons, stolen_property: Core reporting entities.
+- evidence: Metadata for all uploaded files (linked to cases).
+- appointments: Tracks lawyer-client engagement and status.
+- chat_history: Stores interactions with the AI advocate.
+- hearing_status_updates: Staging table for admin-verified lawyer updates.
+
+6. SECURITY IMPLEMENTATION
+--------------------------
+- Session Security: Secure cookies and CSRF protection via Flask secret keys.
+- Data Privacy: Symmetric encryption for file paths on disk.
+- Role Isolation: Route-level decorators prevent unauthorized access between dashboards.
+- SQL Injection Protection: All database interactions use parameterized queries via PyMySQL.
+
+7. SETUP & INSTALLATION
+-----------------------
+- Prerequisites: Python 3.10+, MySQL Server.
+- Requirements: Install dependencies via 'pip install -r requirements.txt'.
+- Configuration: Database credentials and Gemini API Key are managed in 'config.py' and environment variables.
+- Execution: Run 'python app.py' to start the Flask development server.

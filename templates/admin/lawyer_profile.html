@@ -1,0 +1,51 @@
+<!-- templates/admin/lawyer_profile.html -->
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title">Pending Lawyer Approval</h3>
+  </div>
+  
+  <div class="row">
+    <div class="col-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Lawyer List Awaiting For Approval</h4>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Action</th>
+                
+              </tr>
+            </thead>
+            <tbody>
+              {% for lawyer in lawyers %}
+              <tr>
+                <td>{{ lawyer.username }}</td>
+
+                 <td>
+                    <!-- Approve Button -->
+                    <form action="{{ url_for('approve_lawyer', lawyer_id=lawyer.id) }}" method="post" style="display:inline;">
+                      <button type="submit" class="btn btn-success btn-sm">Accept</button>
+                    </form>
+
+                    <!-- Reject Button -->
+                    <form action="{{ url_for('reject_lawyer', lawyer_id=lawyer.id) }}" method="post" style="display:inline;">
+                      <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                    </form>
+                  </td>
+                
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+

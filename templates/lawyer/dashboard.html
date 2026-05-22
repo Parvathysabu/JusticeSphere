@@ -1,0 +1,153 @@
+{% extends "lawyer/base.html" %}
+
+{% block content %}
+<style>
+/* ===== DASHBOARD CARD STYLES ===== */
+.dashboard-card {
+  border-radius: 10px;
+  padding: 10px 10px;
+  border: none;
+  color: #fff;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-card::after {
+  content: "";
+  position: absolute;
+  width: 120px;
+  height: 100px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50%;
+  top: -40px;
+  right: -40px;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 45px rgba(0,0,0,0.3);
+}
+
+.dashboard-icon {
+  font-size: 36px;
+  margin-bottom: 10px;
+}
+
+.stat-label {
+  font-size: 14px;
+  letter-spacing: 0.6px;
+  opacity: 0.9;
+}
+
+.stat-number {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 6px 0;
+}
+
+.stat-closed {
+  font-size: 14px;
+  opacity: 0.95;
+}
+
+/* ===== CARD COLORS ===== */
+.bg-total {
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+}
+
+.bg-request {
+  background: linear-gradient(135deg, #f7971e, #ffd200);
+  color: #000;
+}
+
+.bg-approved {
+  background: linear-gradient(135deg, #11998e, #38ef7d);
+}
+
+.bg-rejected {
+  background: linear-gradient(135deg, #cb2d3e, #ef473a);
+}
+
+/* ===== CLICKABLE CARD WRAPPER ===== */
+.clickable-card {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  cursor: pointer;
+}
+
+.clickable-card:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+.clickable-card .dashboard-card {
+  height: 100%;
+  margin-bottom: 0;
+}
+</style>
+
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title">Lawyer Dashboard</h3>
+  </div>
+
+  <div class="row">
+
+    <!-- TOTAL CASES -->
+    <div class="col-xl-3 col-lg-6 col-sm-6 grid-margin stretch-card">
+      <a href="{{ url_for('lawyer_appointments') }}" class="clickable-card">
+        <div class="card dashboard-card bg-total text-center">
+          <div class="card-body">
+            <i class="mdi mdi-briefcase-check dashboard-icon"></i>
+            <p class="stat-label">Total Cases Received</p>
+            <div class="stat-number">{{ total_case_count }}</div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- CLIENT REQUESTS -->
+    <div class="col-xl-3 col-lg-6 col-sm-6 grid-margin stretch-card">
+      <a href="{{ url_for('lawyer_appointments') }}?status=request" class="clickable-card">
+        <div class="card dashboard-card bg-request text-center">
+          <div class="card-body">
+            <i class="mdi mdi-account-clock dashboard-icon"></i>
+            <p class="stat-label">Client Requests</p>
+            <div class="stat-number">{{ request_case_count }}</div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- APPROVED CASES -->
+    <div class="col-xl-3 col-lg-6 col-sm-6 grid-margin stretch-card">
+      <a href="{{ url_for('lawyer_cases') }}?status=approved" class="clickable-card">
+        <div class="card dashboard-card bg-approved text-center">
+          <div class="card-body">
+            <i class="mdi mdi-check-circle dashboard-icon"></i>
+            <p class="stat-label">Approved Cases</p>
+            <div class="stat-number">{{ approved_case_count }}</div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- REJECTED CASES -->
+    <div class="col-xl-3 col-lg-6 col-sm-6 grid-margin stretch-card">
+      <a href="{{ url_for('lawyer_appointments') }}?status=rejected" class="clickable-card">
+        <div class="card dashboard-card bg-rejected text-center">
+          <div class="card-body">
+            <i class="mdi mdi-close-circle dashboard-icon"></i>
+            <p class="stat-label">Rejected Cases</p>
+            <div class="stat-number">{{ rejected_case_count }}</div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,183 @@
+{% extends "user/base.html" %}
+
+{% block content %}
+<style>
+/* ===== DASHBOARD CARD STYLES ===== */
+.dashboard-card {
+  border-radius: 10px;
+  padding: 10px 10px;
+  border: none;
+  color: #fff;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 280px;      /* Ensure minimum height */
+}
+.dashboard-card .card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;           /* Allow to fill available space */
+}
+
+.dashboard-card::after {
+  content: "";
+  position: absolute;
+  width: 120px;
+  height: 100px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50%;
+  top: -40px;
+  right: -40px;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 45px rgba(0,0,0,0.3);
+}
+
+.dashboard-icon {
+  font-size: 36px;
+  margin-bottom: 10px;
+}
+
+.stat-label {
+  font-size: 14px;
+  letter-spacing: 0.6px;
+  opacity: 0.9;
+}
+
+.stat-number {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 6px 0;
+}
+
+.stat-closed {
+  font-size: 14px;
+  opacity: 0.95;
+}
+
+/* ===== CARD COLORS ===== */
+.bg-cases {
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+}
+
+.bg-crime {
+  background: linear-gradient(135deg, #cb2d3e, #ef473a);
+}
+
+.bg-missing {
+  background: linear-gradient(135deg, #2193b0, #6dd5ed);
+}
+
+.bg-stolen {
+  background: linear-gradient(135deg, #f7971e, #ffd200);
+  color: #000;
+}
+
+/* ===== CLICKABLE CARD WRAPPER ===== */
+.clickable-card {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  cursor: pointer;
+  height: 100%;          /* Ensure full height */
+}
+
+.clickable-card:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+.clickable-card .dashboard-card {
+  height: 100%;
+  margin-bottom: 0;
+}
+
+/* Ensure grid columns have equal height */
+.grid-margin.stretch-card {
+  display: flex;
+}
+
+</style>
+
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title">User Dashboard</h3>
+  </div>
+
+  <div class="row">
+
+    <!-- TOTAL CASES -->
+    <div class="col-xl-3 col-lg-6 col-sm-6 grid-margin stretch-card">
+      <div class="clickable-card">
+        <div class="card dashboard-card bg-cases text-center">
+          <div class="card-body">
+            <i class="mdi mdi-briefcase-check dashboard-icon"></i>
+            <p class="stat-label">Total Cases</p>
+            <div class="stat-number">{{ total_reports }}</div>
+            <hr style="border-color: rgba(255,255,255,0.4);">
+            <p class="stat-closed">Closed</p>
+            <h4>{{ total_closed }}</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOTAL CRIME -->
+    <div class="col-xl-3 col-lg-6 col-sm-6 grid-margin stretch-card">
+      <a href="{{ url_for('report_crime') }}" class="clickable-card">
+        <div class="card dashboard-card bg-crime text-center">
+          <div class="card-body">
+            <i class="mdi mdi-handcuffs dashboard-icon"></i>
+            <p class="stat-label">Total Crime</p>
+            <div class="stat-number">{{ crime_count }}</div>
+            <hr style="border-color: rgba(255,255,255,0.4);">
+            <p class="stat-closed">Closed</p>
+            <h4>{{ closed_crime_count }}</h4>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- MISSING PERSON -->
+    <div class="col-xl-3 col-lg-6 col-sm-6 grid-margin stretch-card">
+      <a href="{{ url_for('missing_persons') }}" class="clickable-card">
+      <div class="card dashboard-card bg-missing text-center">
+        <div class="card-body">
+          <i class="mdi mdi-account-search dashboard-icon"></i>
+          <p class="stat-label">Missing Persons</p>
+          <div class="stat-number">{{ missing_count }}</div>
+          <hr style="border-color: rgba(255,255,255,0.4);">
+          <p class="stat-closed">Closed</p>
+          <h4>{{ closed_missing_count }}</h4>
+        </div>
+      </div>
+      </a>
+    </div>
+
+    <!-- STOLEN PROPERTY -->
+    <div class="col-xl-3 col-lg-6 col-sm-6 grid-margin stretch-card">
+      <a href="{{ url_for('stolen_property') }}" class="clickable-card">
+      <div class="card dashboard-card bg-stolen text-center">
+        <div class="card-body">
+          <i class="mdi mdi-home-lock dashboard-icon"></i>
+          <p class="stat-label">Stolen Property</p>
+          <div class="stat-number">{{ stolen_count }}</div>
+          <hr style="border-color: rgba(0,0,0,0.3);">
+          <p class="stat-closed">Closed</p>
+          <h4>{{ closed_stolen_count }}</h4>
+        </div>
+      </div>
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

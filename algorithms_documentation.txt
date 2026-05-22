@@ -1,0 +1,57 @@
+ALGORITHM DOCUMENTATION - CRIME AWARENESS PROJECT
+===================================================
+
+This document provides a technical summary of the algorithms and logic implemented in the Crime Awareness and Legal Advocate system.
+
+1. AI LEGAL ADVOCATE (GENERATIVE AI)
+------------------------------------
+The project integrates a sophisticated AI Chatbot designed to assist users with legal queries and database information retrieval.
+
+- Model: Google Gemini (gemini-2.0-flash / gemini-2.5-flash).
+- Implementation Logic: 
+  * Two-Step Processing: The system uses few-shot prompting to first determine if a user query requires database access.
+  * Natural Language to SQL (NL2SQL): If DB access is needed, the AI generates a valid MySQL SELECT query based on the project's schema context.
+  * SQL to Natural Language (Data Synthesis): The results from the database are fed back into the model to generate a human-readable, professional legal response.
+  * Fallback Logic: For general legal questions (e.g., IPC/BNS sections), the AI provides expert knowledge directly without database querying.
+
+2. SECURE DATA ENCRYPTION (SYMMETRIC ENCRYPTION)
+------------------------------------------------
+To ensure the privacy and security of uploaded evidence (images/videos), the system implements a symmetric encryption layer.
+
+- Algorithm: Fernet (built on AES-128 in CBC mode with HMAC-SHA256 for integrity).
+- Library: Python 'cryptography'.
+- Application: File names for evidence are encrypted before being stored in the database. This prevents unauthorized access even if the database is compromised, as the actual file names on disk are obfuscated.
+
+3. SPATIAL ANALYSIS (CRIME HOTSPOT MAPPING)
+-------------------------------------------
+The system identifies "Hotspots" based on reported crime locations.
+
+- Algorithm: Density-based Aggregation.
+- Logic: The system performs SQL-level grouping (GROUP BY) on geocoded coordinates (Latitude/Longitude).
+- Output: Identifies locations with the highest frequency of reports, providing critical data for risk assessment and police patrolling optimization.
+
+4. TEMPORAL TREND ANALYSIS (STATISTICAL TRENDING)
+-------------------------------------------------
+Used in Admin and Police dashboards to track crime patterns over time.
+
+- Algorithm: Periodic Time-Series Aggregation.
+- Logic: 
+  * Groups records by month using the 'created_at' timestamps.
+  * Calculates monthly growth or decline rates.
+  * Uses the 'collections.defaultdict' and 'calendar' modules for dynamic data filling (ensures months with zero crimes are still represented).
+- Visualization: Data is prepared for rendering in charts (e.g., ApexCharts/Chart.js) to show crime velocity.
+
+5. ROLE-BASED ACCESS CONTROL (RBAC) LOGIC
+-----------------------------------------
+A security algorithm implemented to manage permissions across four distinct user roles.
+
+- Logic: Session-Based Authorization.
+- Roles: User, Lawyer, Police, Admin.
+- Algorithm: The system utilizes a 'login_required' decorator that checks the 'role' stored in the secure Flask session against the required permission level for each route, ensuring strict data isolation between roles.
+
+6. DATABASE SCHEMA INITIALIZATION & AUTO-SYNC
+---------------------------------------------
+- Logic: Idempotent Schema Synchronization.
+- Algorithm: On application startup, the system executes an initialization algorithm that checks the 'INFORMATION_SCHEMA' of the MySQL database. It detects missing columns or tables (like 'rejection_reason' or 'hearing_status_updates') and automatically applies schema migrations (ALTER/CREATE) without disrupting existing data.
+
+

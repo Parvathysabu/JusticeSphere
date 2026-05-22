@@ -1,0 +1,101 @@
+{% extends "user/base.html" %}
+{% block content %}
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title">Book Appointment</h3>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form method="GET" action="{{ url_for('book_appointment') }}" class="mb-4">
+        <div class="form-group">
+          <label><strong>Select Categories of Lawyers:</strong></label>
+          <select name="category" class="form-control" onchange="this.form.submit()" required>
+            <option value="" disabled selected>Select Category</option>
+            <option value="crime" {% if category == 'crime' %}selected{% endif %}>Crime</option>
+            <!-- <option value="missing_person" {% if category == 'missing_person' %}selected{% endif %}>Missing Person</option>
+            <option value="stolen_property" {% if category == 'stolen_property' %}selected{% endif %}>Stolen Property</option> -->
+          </select>
+        </div>
+      </form>
+
+      {% if category %}
+      <h4 class="card-title mb-3">Your {{ category.replace('_', ' ').title() }} Records</h4>
+
+      {% if case_records %}
+        {% for case in case_records %}
+        <div class="border p-3 rounded mb-3 bg-light">
+
+          {% if category == 'crime' %}
+            <p><strong>Crime Type:</strong> {{ case.crime_type }}</p>
+            <p><strong>Description:</strong> {{ case.description }}</p>
+            <p><strong>Location:</strong> {{ case.location }}</p>
+            <p><strong>Date:</strong> {{ case.date }}</p>
+          {% elif category == 'missing_person' %}
+            <p><strong>Name:</strong> {{ case.name }}</p>
+            <p><strong>Age:</strong> {{ case.age }}</p>
+            <p><strong>Last Seen:</strong> {{ case.last_seen_location }}</p>
+          {% elif category == 'stolen_property' %}
+            <p><strong>Item:</strong> {{ case.item_name }}</p>
+            <p><strong>Description:</strong> {{ case.description }}</p>
+            <p><strong>Location:</strong> {{ case.location }}</p>
+          {% endif %}
+
+          {% set appt = booked_cases.get(case.id) %}
+
+          {% if appt %}
+            {% if appt.status == 'Request' %}
+              <div class="alert alert-warning mt-3">
+                ⏳ Your appointment request is pending.
+              </div>
+            {% elif appt.status == 'Approved' %}
+              <div class="alert alert-success mt-3">
+                ✅ Appointment approved by {{ appt.lawyer_name }}.
+              </div>
+            {% elif appt.status == 'Rejected' %}
+              <div class="alert alert-danger mt-3">
+                ❌ Appointment was rejected. You can book another lawyer below.
+              </div>
+            {% endif %}
+          {% endif %}
+
+          {% if not appt or appt.status == 'Rejected' %}
+          <form method="POST" action="{{ url_for('book_appointment') }}" class="mt-3">
+            <input type="hidden" name="case_id" value="{{ case.id }}">
+            <input type="hidden" name="category" value="{{ category }}">
+
+            <div class="form-group">
+              <label><strong>Select Lawyer:</strong></label>
+              <select name="lawyer_id" class="form-control" required>
+                <option value="" disabled selected>Select Lawyer</option>
+                {% for lawyer in lawyers %}
+                  <option value="{{ lawyer.id }}">
+                    {{ lawyer.full_name }} ({{ lawyer.specialization }}) - ₹{{ lawyer.fees }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label><strong>Appointment Date:</strong></label>
+              <input type="date" name="appointment_date" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+              <label><strong>Appointment Time:</strong></label>
+              <input type="time" name="appointment_time" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-sm mt-2">Book Appointment</button>
+          </form>
+          {% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted">No records found for this category.</p>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

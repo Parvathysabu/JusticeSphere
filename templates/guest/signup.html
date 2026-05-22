@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - JUSTICESphere</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            background: #fff;
+            padding-top: 60px;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #0b132b;
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            z-index: 1000;
+        }
+
+        nav a {
+            color: #fff;
+            font-size: 1.3rem;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .page-wrapper {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        .left-panel {
+            flex: 1.4;
+            background:
+                linear-gradient(rgba(156, 39, 176, .6), rgba(233, 30, 99, .6)),
+                url("/static/assets/images/img/balance_hands.jpg") center/cover no-repeat;
+            display: none;
+        }
+
+        .right-panel {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .signup-container {
+            width: 100%;
+            max-width: 420px;
+            padding: 2rem;
+        }
+
+        .signup-container h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            font-size: .85rem;
+            color: #444;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .required::after {
+            content: " *";
+            color: #d32f2f;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: .7rem 0;
+            margin-bottom: 1rem;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            font-size: .95rem;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-bottom: 2px solid #d32f2f;
+        }
+
+        button {
+            width: 100%;
+            padding: .9rem;
+            background: linear-gradient(135deg, #c62828, #e53935);
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        #imagePreview {
+            width: 120px;
+            height: 120px;
+            border-radius: 12px;
+            border: 2px dashed #d32f2f;
+            display: none;
+            object-fit: cover;
+            margin: auto;
+        }
+
+        #removeImage {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #e53935;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: none;
+        }
+
+        #barCouncilField,
+        #policeIdField {
+            display: none;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .links a {
+            color: #d32f2f;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        @media(min-width:992px) {
+            .left-panel {
+                display: block;
+            }
+        }
+
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-popup {
+            position: absolute;
+            left: 105%;
+            top: 0;
+            width: 240px;
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 100;
+        }
+
+        .password-popup::before {
+            content: '';
+            position: absolute;
+            right: 100%;
+            top: 15px;
+            border: 8px solid transparent;
+            border-right-color: #fff;
+        }
+
+        .password-popup h4 {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .requirement {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .requirement.valid {
+            color: #2e7d32;
+        }
+
+        .requirement.invalid {
+            color: #d32f2f;
+        }
+
+        @media(max-width:991px) {
+            .password-popup {
+                position: static;
+                width: 100%;
+                margin-top: 10px;
+                margin-bottom: 20px;
+            }
+
+            .password-popup::before {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a href="/">JUSTICESphere</a>
+    </nav>
+
+    <div class="page-wrapper">
+
+        <div class="left-panel"></div>
+
+        <div class="right-panel">
+            <div class="signup-container">
+
+                <h2>Create Account</h2>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}"
+                    style="padding: 1rem; margin-bottom: 1rem; border-radius: 8px; 
+                    {% if category == 'success' %} background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; {% else %} background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; {% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="/signup" enctype="multipart/form-data">
+
+                    <label class="required">Full Name</label>
+                    <input type="text" name="full_name" required>
+
+                    <label class="required">Username</label>
+                    <input type="text" name="username" required>
+
+                    <label class="required">email</label>
+                    <input type="email" name="email" pattern="^[a-zA-Z0-9._%+-]+@gmail\.com$"
+                        placeholder="example@gmail.com" required>
+
+                    <small>Enter a valid email address</small>
+
+                    <label class="required">Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" name="password" id="passwordInput"
+                            pattern="(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{8,}"
+                            title="Minimum 8 characters with letter, number and special character" required>
+
+                        <div class="password-popup" id="passwordPopup">
+                            <h4>Password Requirements:</h4>
+                            <div class="requirement" id="req-length">● At least 8 characters</div>
+                            <div class="requirement" id="req-letter">● At least one letter</div>
+                            <div class="requirement" id="req-number">● At least one number</div>
+                            <div class="requirement" id="req-special">● At least one special character (@$!%*#?&)</div>
+                        </div>
+                    </div>
+
+                    <label class="required">Confirm Password</label>
+                    <input type="password" name="confirm_password" required>
+
+                    <label class="required">Phone Number</label>
+
+                    <div style="display:flex;gap:6px">
+
+                        <select name="country_code" required style="width:30%">
+                            <option value="+91">🇮🇳 India +91</option>
+                            <option value="+1">🇺🇸 USA +1</option>
+                            <option value="+44">🇬🇧 UK +44</option>
+                            <option value="+971">🇦🇪 UAE +971</option>
+                        </select>
+
+                        <input type="tel" name="phone" pattern="[0-9]{10}" placeholder="10 digit number" required
+                            style="width:70%">
+
+                    </div>
+
+                    <small>Phone must be 10 digits</small>
+
+                    <label class="required">Upload Profile Image</label>
+
+                    <input type="file" name="profile_image" id="imageInput" accept=".jpg,.jpeg,.png" required>
+
+                    <small>Only JPG or PNG allowed</small>
+
+                    <div style="position:relative;width:120px;margin:auto">
+
+                        <img id="imagePreview">
+
+                        <button type="button" id="removeImage">✖</button>
+
+                    </div>
+
+                    <label class="required">Select Role</label>
+
+                    <select name="role" id="roleSelect" required>
+
+                        <option value="">Select Role</option>
+                        <option value="user">User</option>
+                        <option value="lawyer">Lawyer</option>
+                        <option value="police">Police</option>
+
+                    </select>
+
+                    <div id="barCouncilField">
+                        <label>Bar Council Number</label>
+                        <input type="text" name="bar_council_number">
+                    </div>
+
+                    <div id="policeIdField">
+                        <label>Police Unique ID</label>
+                        <input type="text" name="police_id">
+                    </div>
+
+                    <button type="submit">Sign Up</button>
+
+                </form>
+
+                <div class="links">
+                    <p>Already have an account? <a href="/login">Sign in →</a></p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        const roleSelect = document.getElementById("roleSelect");
+        const barField = document.getElementById("barCouncilField");
+        const policeField = document.getElementById("policeIdField");
+
+        roleSelect.addEventListener("change", function () {
+
+            barField.style.display = "none";
+            policeField.style.display = "none";
+
+            if (this.value === "lawyer") {
+                barField.style.display = "block";
+            }
+
+            if (this.value === "police") {
+                policeField.style.display = "block";
+            }
+
+        });
+
+        const imageInput = document.getElementById("imageInput");
+        const preview = document.getElementById("imagePreview");
+        const removeBtn = document.getElementById("removeImage");
+
+        imageInput.addEventListener("change", function (e) {
+
+            const file = e.target.files[0];
+
+            if (file) {
+
+                if (
+                    !file.name.toLowerCase().endsWith(".jpg") &&
+                    !file.name.toLowerCase().endsWith(".jpeg") &&
+                    !file.name.toLowerCase().endsWith(".png")
+                ) {
+                    alert("Only JPG or PNG images allowed");
+                    imageInput.value = "";
+                    return;
+                }
+
+                const reader = new FileReader();
+
+                reader.onload = function (ev) {
+
+                    preview.style.display = "block";
+                    removeBtn.style.display = "block";
+                    preview.src = ev.target.result;
+
+                };
+
+                reader.readAsDataURL(file);
+
+            }
+
+        });
+
+        removeBtn.addEventListener("click", function () {
+
+            preview.src = "";
+            preview.style.display = "none";
+            removeBtn.style.display = "none";
+            imageInput.value = "";
+
+        });
+
+
+        const passwordInput = document.getElementById("passwordInput");
+        const passwordPopup = document.getElementById("passwordPopup");
+
+        const requirements = {
+            length: document.getElementById("req-length"),
+            letter: document.getElementById("req-letter"),
+            number: document.getElementById("req-number"),
+            special: document.getElementById("req-special")
+        };
+
+        function validatePassword(value) {
+            const checks = {
+                length: value.length >= 8,
+                letter: /[A-Za-z]/.test(value),
+                number: /\d/.test(value),
+                special: /[@$!%*#?&]/.test(value)
+            };
+
+            Object.keys(checks).forEach(key => {
+                if (checks[key]) {
+                    requirements[key].classList.add("valid");
+                    requirements[key].classList.remove("invalid");
+                    requirements[key].innerText = "✓ " + requirements[key].innerText.replace(/^[●✓✗] /, "");
+                } else {
+                    requirements[key].classList.add("invalid");
+                    requirements[key].classList.remove("valid");
+                    requirements[key].innerText = "✗ " + requirements[key].innerText.replace(/^[●✓✗] /, "");
+                }
+            });
+
+            return Object.values(checks).every(Boolean);
+        }
+
+        passwordInput.addEventListener("focus", () => {
+            passwordPopup.style.display = "block";
+            validatePassword(passwordInput.value);
+        });
+
+        passwordInput.addEventListener("input", () => {
+            validatePassword(passwordInput.value);
+        });
+
+        passwordInput.addEventListener("blur", () => {
+            if (validatePassword(passwordInput.value)) {
+                passwordPopup.style.display = "none";
+            }
+        });
+
+    </script>
+
+</body>
+
+</html>

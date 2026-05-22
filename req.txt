@@ -1,0 +1,5 @@
+flask
+pip install cryptography
+EVIDENCE_SECRET_KEY=ofxkGb565y_nFBBqxFADMCVtG2hX7PPJlZDQ3bneHVQ=
+sUVh_wpwpBBuTiZClf4JwIEN0kO-6hSs2eXjczniLA0=
+xAPgXY4P4P_rbjzxvvYOqbB5cD9zXcCbLXYUatQUBo8=

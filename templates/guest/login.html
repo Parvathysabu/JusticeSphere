@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - JUSTICESphere</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+:root{
+  --navy:#0b132b;
+  --red:#c62828;
+  --red2:#d32f2f;
+  --light:#f5f5f5;
+}
+
+body{
+  font-family:'DM Sans',sans-serif;
+  min-height:100vh;
+  background:var(--light);
+  padding-top:60px;
+}
+
+/* NAVBAR */
+nav{
+  position:fixed;top:0;left:0;right:0;height:60px;
+  background:var(--navy);
+  display:flex;align-items:center;padding:0 2rem;
+  z-index:100;
+  box-shadow:0 2px 12px rgba(0,0,0,.3);
+}
+nav a{
+  color:#fff;font-size:1.3rem;text-decoration:none;
+  font-weight:700;font-family:'Playfair Display',serif;
+  letter-spacing:.5px;
+}
+
+/* LAYOUT */
+.page-wrapper{display:flex;min-height:calc(100vh - 60px);}
+
+/* LEFT PANEL */
+.left-panel{
+  flex:1.4;
+  background:
+    linear-gradient(rgba(11,19,43,.55),rgba(198,40,40,.5)),
+    url("/static/assets/images/img/balance_hands.jpg") center/cover no-repeat;
+  display:none;
+  position:relative;
+  overflow:hidden;
+}
+.left-panel-content{
+  position:absolute;bottom:3rem;left:3rem;right:3rem;color:#fff;
+}
+.left-panel-content h1{
+  font-family:'Playfair Display',serif;
+  font-size:2.2rem;line-height:1.3;margin-bottom:.8rem;
+}
+.left-panel-content p{
+  font-size:.95rem;opacity:.85;line-height:1.6;
+}
+
+/* RIGHT PANEL */
+.right-panel{flex:1;display:flex;justify-content:center;align-items:center;padding:2rem;}
+
+/* LOGIN CARD */
+.login-container{
+  background:#fff;width:100%;max-width:420px;
+  padding:2.5rem;border-radius:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.12);
+  animation:slideUp .5s ease;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+.login-container h2{
+  text-align:center;margin-bottom:.4rem;
+  font-family:'Playfair Display',serif;
+  font-size:1.7rem;color:var(--navy);
+}
+.login-container .subtitle{
+  text-align:center;color:#888;font-size:.88rem;margin-bottom:1.8rem;
+}
+
+/* LABEL + INPUT */
+.field{margin-bottom:1.1rem;}
+.field label{
+  display:block;font-size:.82rem;font-weight:600;
+  color:var(--navy);margin-bottom:.4rem;letter-spacing:.3px;
+}
+.field input{
+  width:100%;padding:.85rem 1rem;
+  border-radius:10px;border:1.5px solid #e0e0e0;
+  font-family:'DM Sans',sans-serif;font-size:.95rem;
+  transition:border-color .2s,box-shadow .2s;
+  background:#fafafa;
+}
+.field input:focus{
+  outline:none;border-color:var(--red2);
+  box-shadow:0 0 0 3px rgba(211,47,47,.1);
+  background:#fff;
+}
+
+/* BUTTON */
+.btn-primary{
+  width:100%;padding:.95rem;
+  background:linear-gradient(135deg,var(--red),var(--red2));
+  color:#fff;border:none;border-radius:10px;
+  font-weight:600;font-size:1rem;
+  font-family:'DM Sans',sans-serif;
+  cursor:pointer;letter-spacing:.3px;
+  transition:opacity .2s,transform .15s,box-shadow .2s;
+  box-shadow:0 4px 15px rgba(198,40,40,.3);
+  margin-top:.3rem;
+}
+.btn-primary:hover{opacity:.92;transform:translateY(-1px);box-shadow:0 6px 20px rgba(198,40,40,.35);}
+.btn-primary:active{transform:translateY(0);}
+
+/* DIVIDER */
+.divider{
+  display:flex;align-items:center;gap:.8rem;margin:1.3rem 0;
+}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#e8e8e8;}
+.divider span{font-size:.78rem;color:#aaa;white-space:nowrap;}
+
+/* LINKS */
+.links{text-align:center;margin-top:1.1rem;font-size:.9rem;color:#666;}
+.links a{color:var(--red2);text-decoration:none;font-weight:600;}
+.links a:hover{text-decoration:underline;}
+.links p{margin-top:.5rem;}
+
+/* FORGOT link above button */
+.forgot-link{text-align:right;margin-top:-.5rem;margin-bottom:.9rem;}
+.forgot-link a{font-size:.83rem;color:var(--red2);text-decoration:none;font-weight:600;}
+.forgot-link a:hover{text-decoration:underline;}
+
+/* POPUP */
+#popup{
+  display:none;position:fixed;top:20px;right:20px;
+  padding:14px 20px;border-radius:10px;color:#fff;
+  font-weight:600;z-index:9999;max-width:320px;
+  font-size:.9rem;box-shadow:0 8px 25px rgba(0,0,0,.2);
+  animation:popIn .3s ease;
+}
+@keyframes popIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+
+@media(min-width:992px){
+  .left-panel{display:block;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/">JUSTICESphere</a>
+</nav>
+
+<div class="page-wrapper">
+  <div class="left-panel">
+    <div class="left-panel-content">
+      <h1>Justice begins with access.</h1>
+      <p>Connect with lawyers, track cases, and navigate the legal system — all in one place.</p>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="login-container">
+      <h2>Welcome Back</h2>
+      <p class="subtitle">Login to your JUSTICESphere account</p>
+
+      <form method="POST" action="/login">
+        <div class="field">
+          <label>Username</label>
+          <input type="text" name="username" placeholder="Enter your username" required>
+        </div>
+
+        <div class="field">
+          <label>Password</label>
+          <input type="password" name="password" placeholder="Enter your password" required>
+        </div>
+
+        <div class="forgot-link">
+          <a href="/forgot_password">Forgot Password?</a>
+        </div>
+
+        <button type="submit" class="btn-primary">Login</button>
+      </form>
+
+      <div class="divider"><span>New here?</span></div>
+
+      <div class="links">
+        <p>Don't have an account? <a href="/signup">Create Account</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- POPUP -->
+<div id="popup"></div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<script>
+function showPopup(msg, type){
+  const p = document.getElementById("popup");
+  p.innerText = msg;
+  p.style.background = type === "success" ? "#28a745" : "#dc3545";
+  p.style.display = "block";
+  setTimeout(() => { p.style.display = "none"; }, 3500);
+}
+{% for category, message in messages %}
+showPopup("{{ message }}", "{{ category }}" === "success" ? "success" : "error");
+{% endfor %}
+</script>
+{% endif %}
+{% endwith %}
+
+</body>
+</html>

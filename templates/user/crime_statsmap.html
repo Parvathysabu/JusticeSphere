@@ -1,0 +1,26 @@
+{% extends "user/base.html" %}
+{% block content %}
+<div class="content-wrapper">
+  <h3 class="page-title">Crime Hotspot Map</h3>
+  <div id="map" style="height: 500px;"></div>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <script>
+    var map = L.map('map').setView([9.9312, 76.2673], 11); // Center at Kochi
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18
+    }).addTo(map);
+
+    var stats = {{ stats|tojson }};
+
+    stats.forEach(function(s){
+      L.marker([s.latitude, s.longitude])
+       .addTo(map)
+       .bindPopup("<b>" + s.hotspot + "</b><br>" + s.crime_type + ": " + s.count);
+    });
+  </script>
+</div>
+{% endblock %}

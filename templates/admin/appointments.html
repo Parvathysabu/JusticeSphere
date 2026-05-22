@@ -1,0 +1,38 @@
+<!-- templates/admin/appointments.html -->
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title">Appointments</h3>
+  </div>
+  <div class="row">
+    <div class="col-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Appointment List</h4>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Lawyer</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for appt in appointments %}
+              <tr>
+                <td>{{ appt.client }}</td>
+                <td>{{ appt.lawyer }}</td>
+                <td>{{ appt.date }}</td>
+                <td><label class="badge badge-{{ 'success' if appt.status == 'Completed' else 'warning' }}">{{ appt.status }}</label></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
